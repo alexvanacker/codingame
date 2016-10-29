@@ -256,6 +256,49 @@ class Graph:
         nb_links = len(self.adj_list[node])
         return nb_links >= node.value
 
+    def is_vertical_link_crossing(self, node1, node2):
+        y_high = max(node1.y, node2.y)
+        y_low = min(node1.y, node2.y)
+        other_nodes = {k: v for (k, v) in self.adj_list.iteritems() if k is not node1 and k is not node2}
+        # Remove those that are on the same axes: their links cannot cross
+        # We do not check node2.x since it is assumed equal in this method.
+        potential_crosses = {k: v for (k, v) in other_nodes.iteritems() if k.x != node1.x and k.y != node1.y and k.y != node2.y}
+        for node, linked_nodes in potential_crosses.iteritems():
+            # Check only horizontal links
+            for linked_node in [l for l in linked_nodes if l.y == node.y]:
+                y_link = node.y
+                x_low = min(node.x, linked_node.x)
+                x_max = max(node.x, linked_node.x)
+                if y_link > y_low and y_link < y_high and node1.x > x_low and node1.x < x_max:
+                    return True
+        return False
+
+    def is_horizontal_link_crossing(self, node1, node2):
+        x_high = max(node1.x, node2.x)
+        x_low = min(node1.x, node2.x)
+        other_nodes = {k: v for (k, v) in self.adj_list.iteritems() if k is not node1 and k is not node2}
+        # Remove those that are on the same axes: their links cannot cross
+        # We do not check node2.y since it is assumed equal in this method.
+        potential_crosses = {k: v for (k, v) in other_nodes.iteritems() if k.y != node1.y and k.x != node1.x and k.x != node2.x}
+        for node, linked_nodes in potential_crosses.iteritems():
+            # Check only vertical links
+            for linked_node in [l for l in linked_nodes if l.x == node.x]:
+                x_link = node.x
+                y_low = min(node.y, linked_node.y)
+                y_max = max(node.y, linked_node.y)
+                if x_link > x_low and x_link < x_high and node1.y > y_low and node1.y < y_max:
+                    return True
+        return False
+
+    def is_link_crossing_other_links(self, node1, node2):
+        """ returns True if the link between two nodes
+        crosses any other existing link in the graph.
+        """
+        if node1.x == node2.x:
+            return self.is_vertical_link_crossing(node1, node2)
+        else:
+            return self.is_horizontal_link_crossing(node1, node2)
+
     def __repr__(self):
         return str(self.adj_list)
 
@@ -271,7 +314,7 @@ def remove_obvious_solutions(graph, solutions):
     # 4s that are in corners
     # 6s that are on edges
     # 8s anywhere else
-    corners = [(0, 0), (0, graph.height - 1), (width - 1, 0), (width - 1, height - 1)]
+    corners = [(0, 0), (0, graph.height - 1), (graph.width - 1, 0), (graph.width - 1, graph.height - 1)]
     for x, y in corners:
         node = graph.get_point(x, y)
         if node is not None and node.value == 4:

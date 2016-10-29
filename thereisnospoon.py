@@ -48,6 +48,8 @@ class Graph:
     def __init__(self, cell_matrix, width, height):
         self.width = width
         self.height = height
+        assert width == len(cell_matrix[0])
+        assert height == len(cell_matrix)
         self.adj_list = {}
         # Map x, y to a Node
         self.matrix = {}
@@ -419,18 +421,23 @@ def find_sol(graph):
             return None
 
 
-width = int(raw_input())  # the number of cells on the X axis
-height = int(raw_input())  # the number of cells on the Y axis
-cell_matrix = []
-for i in xrange(height):
-    line = raw_input()  # width characters, each either a number or a '.'
-    cell_matrix.append(line)
+def main():
+    width = int(raw_input())  # the number of cells on the X axis
+    height = int(raw_input())  # the number of cells on the Y axis
+    cell_matrix = []
+    for i in xrange(height):
+        line = raw_input()  # width characters, each either a number or a '.'
+        cell_matrix.append(line)
 
-graph = Graph(cell_matrix, width, height)
+    graph = Graph(cell_matrix, width, height)
 
-print >> sys.stderr, str(graph)
+    print >> sys.stderr, str(graph)
 
-solutions = find_sol_main(graph)
+    solutions = find_sol_main(graph)
 
-for s in solutions:
-    print s
+    for s in solutions:
+        print s
+
+
+if __name__ == '__main__':
+    main()

@@ -14,6 +14,15 @@ class TestThereIsNoSpoon(unittest.TestCase):
         height = 5
         graph = tisn.Graph(cell_matrix, width, height)
 
+        n1 = graph.get_point(2, 0)
+        n2 = graph.get_point(2, 4)
+        graph.add_link(n1, n2)
+        n3 = graph.get_point(0, 2)
+        n4 = graph.get_point(4, 2)
+        graph.add_link(n3, n4)
+        crosses = graph.is_link_crossing_other_links(n1, n2)
+        self.assertTrue(crosses)
+
 
 if __name__ == '__main__':
     unittest.main()

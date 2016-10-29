@@ -143,6 +143,10 @@ class Graph:
             print >> sys.stderr, 'Already two links, cannot add more between the nodes.'
             return False
 
+        if self.is_link_crossing_other_links(node1, node2):
+            print >> sys.stderr, 'Link would cross another one, cannot add it.'
+            return False
+
         for n, links in self.adj_list.iteritems():
             if n.equals(node1):
                 links.append(node2)

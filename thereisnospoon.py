@@ -124,6 +124,10 @@ class Graph:
         for node in self.adj_list:
             print >> sys.stderr, "Neighbors of " + str(node) + ": " + str(node.neighbors)
 
+    def add_two_links(self, node1, node2):
+        self.add_link(node1, node2)
+        self.add_link(node1, node2)
+
     def add_link(self, node1, node2):
         # print >> sys.stderr, 'Adding link between '+str(node1)+' and ' + str(node2)
         if len(self.adj_list[node1]) >= node1.value:
@@ -270,8 +274,7 @@ def remove_obvious_solutions(graph, solutions):
         node = graph.get_point(x, y)
         if node is not None and node.value == 4:
             for neighbor in node.neighbors:
-                graph.add_link(node, neighbor)
-                graph.add_link(node, neighbor)
+                graph.add_two_links(node, neighbor)
                 solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 2")
                 # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 2"
 
@@ -291,8 +294,7 @@ def remove_obvious_solutions(graph, solutions):
                 print >> sys.stderr, 'Linking node on edge with value 6: ' + str(node)
                 for neighbor in node.neighbors:
                     if graph.nb_links(neighbor, node) == 0:
-                        graph.add_link(node, neighbor)
-                        graph.add_link(node, neighbor)
+                        graph.add_two_links(node, neighbor)
                         solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 2")
                         # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 2"
 
@@ -301,8 +303,7 @@ def remove_obvious_solutions(graph, solutions):
             for neighbor in node.neighbors:
                 if graph.nb_links(neighbor, node) == 0:
                     print >> sys.stderr, 'Linking node with value 8: ' + str(node) + ' ' + str(neighbor)
-                    graph.add_link(node, neighbor)
-                    graph.add_link(node, neighbor)
+                    graph.add_two_links(node, neighbor)
                     # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 2"
                     solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 2")
 

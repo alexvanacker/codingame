@@ -1,8 +1,4 @@
 import sys
-import math
-
-def log(obj):
-    print >> sys.stderr, obj
 
 
 class Node:
@@ -15,17 +11,18 @@ class Node:
         self.neighbors = []
 
     def __repr__(self):
-        return '(' + str(self.x) +',' + str(self.y) + ',' + str(self.value)+')'
+        return '(' + str(self.x) + ',' + str(self.y) + ',' +\
+               str(self.value) + ')'
 
     def to_solution_string(self):
-        return str(self.x)+ " " + str(self.y)
-    
+        return str(self.x) + " " + str(self.y)
+
     def coords(self):
         return (self.x, self.y)
-        
+
     def get_value(self):
         return self.value
-        
+
     def equals(self, node):
         return self.x == node.x and self.y == node.y
 
@@ -42,14 +39,12 @@ class Node:
         return NotImplemented
 
     def __hash__(self):
-        """Override the default hash behavior (that returns the id or the object)"""
         return hash(tuple([self.x, self.y]))
-
 
 
 class Graph:
     """ Representation of the graph"""
-    
+
     def __init__(self, cell_matrix, width, height):
         self.width = width
         self.height = height
@@ -76,7 +71,7 @@ class Graph:
             # Up
             while(current_y > 0):
                 current_y = current_y - 1
-                # Is there a node? 
+                # Is there a node?
                 possible_neighbor = self.get_point(current_x, current_y)
                 if possible_neighbor is not None:
                     # print >> sys.stderr, 'Found a neighbor '+str(possible_neighbor)
@@ -376,26 +371,27 @@ def find_sol_main(graph):
     print >> sys.stderr, 'Final graph: ' + str(graph)
     return solutions
 
+
 def find_sol(graph):
     solution = []
     """ Returns the list of strings to print
     which are the links to create. """
-    # Check if there are any islands: if so then this is not a solution and 
-    # we return None
-    # if graph.has_unlinkable_islands():
-    #     return None
 
     # List of all nodes which need links
     unfilled = [n for n in graph.adj_list if not graph.is_filled(n)]
     if len(unfilled) > 0:
-        # Take a node
-        # take node of lowest value: sort by value (ascending) then take the first one.
+        # Take node of lowest value: sort by value (ascending)
+        # then take the first one.
         unfilled.sort(key=lambda x: x.value)
         node = unfilled[0]
-        
-        # Get one of its unfilled neighbors that has less than 2 links from node
-        unfilled_neighbors = [m for m in node.neighbors if not graph.is_filled(m)]
-        unfilled_neighbors_linkable = [l for l in unfilled_neighbors if graph.nb_links(node, l) < 2]
+
+        # Get one of its unfilled neighbors that has less than
+        # 2 links from node
+        unfilled_neighbors = [m for m in node.neighbors
+                              if not graph.is_filled(m)]
+
+        unfilled_neighbors_linkable = [l for l in unfilled_neighbors
+                                       if graph.nb_links(node, l) < 2]
         # TODO check if link would cross another
 
         if len(unfilled_neighbors) > 0:
@@ -403,14 +399,16 @@ def find_sol(graph):
             unfilled_neighbors.sort(key=lambda x: x.value)
             for neighbor in unfilled_neighbors_linkable:
                 if graph.add_link(node, neighbor):
-                    solution.append(node.to_solution_string()+" "+neighbor.to_solution_string() + " 1")
+                    solution_string = node.to_solution_string() + " " +\
+                        neighbor.to_solution_string() + " 1"
+                    solution.append(solution_string)
                     rec_sol = find_sol(graph)
                     if rec_sol is not None:
                         solution.extend(rec_sol)
                         return solution
-                        
+
                     else:
-                        #remove the link, we don't have a solution there
+                        # remove the link, we don't have a solution there
                         graph.remove_link(node, neighbor)
                         del solution[-1]
         else:
@@ -420,15 +418,13 @@ def find_sol(graph):
             return solution
         else:
             return None
-    
-                    
 
 
-width = int(raw_input()) # the number of cells on the X axis
-height = int(raw_input()) # the number of cells on the Y axis
+width = int(raw_input())  # the number of cells on the X axis
+height = int(raw_input())  # the number of cells on the Y axis
 cell_matrix = []
 for i in xrange(height):
-    line = raw_input() # width characters, each either a number or a '.'
+    line = raw_input()  # width characters, each either a number or a '.'
     cell_matrix.append(line)
 
 graph = Graph(cell_matrix, width, height)
@@ -439,4 +435,3 @@ solutions = find_sol_main(graph)
 
 for s in solutions:
     print s
-

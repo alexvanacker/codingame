@@ -181,10 +181,6 @@ class Graph:
                 # print >> sys.stderr, "A node was not linked! " + str(n)
                 return False
 
-        # Check for crossed links
-        for node, links in self.adj_list.iteritems():
-            pass
-
         return True
 
     def get_nb_links_node(self, node):

@@ -143,9 +143,9 @@ class Graph:
             print >> sys.stderr, 'Already two links, cannot add more between the nodes.'
             return False
 
-        if self.is_link_crossing_other_links(node1, node2):
-            print >> sys.stderr, 'Link would cross another one, cannot add it.'
-            return False
+        # if self.is_link_crossing_other_links(node1, node2):
+        #     print >> sys.stderr, 'Link would cross another one, cannot add it.'
+        #     return False
 
         for n, links in self.adj_list.iteritems():
             if n.equals(node1):
@@ -181,6 +181,10 @@ class Graph:
                 # print >> sys.stderr, "A node was not linked! " + str(n)
                 return False
 
+        for node, nodelist in self.adj_list.iteritems():
+            for linked in nodelist:
+                if self.is_link_crossing_other_links(node, linked):
+                    return False
         return True
 
     def get_nb_links_node(self, node):
@@ -364,16 +368,16 @@ def remove_obvious_solutions(graph, solutions):
         had_mod = True
         while(had_mod):
             had_mod = False
-            print >> sys.stderr, 'Value ' + str(x) + ': inspect list: ' + str(to_inspect)
+            # print >> sys.stderr, 'Value ' + str(x) + ': inspect list: ' + str(to_inspect)
             for node in to_inspect:
                 unfilled_neighbors = [m for m in node.neighbors if not graph.is_filled(m)]
                 unfilled_neighbors_linkable = [l for l in unfilled_neighbors if graph.nb_links(node, l) < 2]
 
-                print >> sys.stderr, str(node) + ': Unfilled neighbors linkable: ' + str(unfilled_neighbors_linkable)
+                # print >> sys.stderr, str(node) + ': Unfilled neighbors linkable: ' + str(unfilled_neighbors_linkable)
                 if len(unfilled_neighbors_linkable) == 1:
                     had_mod = True
                     neighbor = unfilled_neighbors_linkable[0]
-                    print >> sys.stderr, 'Found an optimization between ' + str(node) + ' and ' + str(neighbor)
+                    # print >> sys.stderr, 'Found an optimization between ' + str(node) + ' and ' + str(neighbor)
                     graph.add_link(node, neighbor)
                     solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
                     # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 1"
@@ -381,11 +385,11 @@ def remove_obvious_solutions(graph, solutions):
                 else:
 
                     unfilled_neighbors_linkable = [t for t in unfilled_neighbors_linkable if graph.get_nb_links_node(t) != t.value - 1]
-                    print >> sys.stderr, str(node) + ': Neighbors which have a 1 link possibility: ' + str(unfilled_neighbors_linkable)
+                    # print >> sys.stderr, str(node) + ': Neighbors which have a 1 link possibility: ' + str(unfilled_neighbors_linkable)
                     if len(unfilled_neighbors_linkable) == 1:
                         had_mod = True
                         neighbor = unfilled_neighbors_linkable[0]
-                        print >> sys.stderr, 'Found an optimization between ' + str(node) + ' and ' + str(neighbor)
+                        # print >> sys.stderr, 'Found an optimization between ' + str(node) + ' and ' + str(neighbor)
                         graph.add_link(node, neighbor)
                         solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
                         # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 1"
@@ -393,15 +397,17 @@ def remove_obvious_solutions(graph, solutions):
                     else:
                         # Filter those which value is not the current number
                         unfilled_neighbors_linkable = [t for t in unfilled_neighbors_linkable if t.value == x]
-                        print >> sys.stderr, str(node) + ': Possible neighbors with value set to ' + str(x) + ': ' + str(unfilled_neighbors_linkable)
+                        # print >> sys.stderr, str(node) + ': Possible neighbors with value set to ' + str(x) + ': ' + str(unfilled_neighbors_linkable)
                         if len(unfilled_neighbors_linkable) == 1:
                             had_mod = True
                             neighbor = unfilled_neighbors_linkable[0]
-                            print >> sys.stderr, 'Found an optimization between ' + str(node) + ' and ' + str(neighbor)
+                            # print >> sys.stderr, 'Found an optimization between ' + str(node) + ' and ' + str(neighbor)
                             graph.add_link(node, neighbor)
                             # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 1"
                             solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
                             to_inspect = [nd for nd in node_x_values if graph.get_nb_links_node(nd) == x - 1]
+
+    print >> sys.stderr, 'End of optimizations.'
 
 
 def find_sol_main(graph):

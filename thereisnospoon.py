@@ -1,4 +1,5 @@
 import sys
+import time
 
 
 class Node:
@@ -365,6 +366,14 @@ def remove_obvious_solutions(graph, solutions):
                         graph.add_link(node, neighbor)
                         solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
 
+        if node.value == 7:
+            # Any node with a 7 will have at least one link going in each direction.
+            for neighbor in node.neighbors:
+                nb_links_between_the_two = graph.nb_links(neighbor, node)
+                if nb_links_between_the_two == 0:
+                    graph.add_link(node, neighbor)
+                    solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+
         if node.value == 8:
             # add all the links
             for neighbor in node.neighbors:
@@ -433,10 +442,17 @@ def remove_obvious_solutions(graph, solutions):
 
 def find_sol_main(graph):
     solutions = []
+    start_optim = time.clock()
     remove_obvious_solutions(graph, solutions)
-    print >> sys.stderr, 'Graph: ' + str(graph)
+    time_optim = time.clock() - start_optim
+    print >> sys.stderr, 'Time for optimization: ' + str(time_optim)
+    # print >> sys.stderr, 'Graph: ' + str(graph)
     print >> sys.stderr, 'Launching recursive search...'
+
+    start_rec = time.clock()
     solutions.extend(find_sol(graph))
+    time_rec = time.clock() - start_rec
+    print >> sys.stderr, 'Time for recursive search: ' + str(time_rec)
 
     # Final graph adj list debug
     print >> sys.stderr, 'Final graph: ' + str(graph)

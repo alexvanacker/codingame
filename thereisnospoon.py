@@ -332,9 +332,9 @@ def add_obvious_links(graph, solutions):
 def remove_obvious_solutions(graph, solutions):
     print >> sys.stderr, 'Optimization phase: removing obvious solutions.'
     # First easy step: set the obivous ones:
-    # 4s that are in corners
-    # 6s that are on edges
-    # 8s anywhere else
+    # 3s and 4s that are in corners
+    # 5s and 6s that are on edges
+    # 7s and 8s anywhere else
     corners = [(0, 0), (0, graph.height - 1), (graph.width - 1, 0), (graph.width - 1, graph.height - 1)]
     for x, y in corners:
         node = graph.get_point(x, y)
@@ -355,7 +355,6 @@ def remove_obvious_solutions(graph, solutions):
                 if graph.add_link(node, neighbor):
                     solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
 
-    # 8s and 6s
     for node in graph.adj_list:
         if node.value == 1:
             # Check if there is only one neighbor with value > 1
@@ -374,8 +373,7 @@ def remove_obvious_solutions(graph, solutions):
                     if graph.add_link(node, neighbor):
                         solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
 
-        if node.value == 6:
-            if graph.is_on_edge(node):
+        if node.value == 6 and graph.is_on_edge(node):
                 for neighbor in node.neighbors:
                     nb_links_between_the_two = graph.nb_links(neighbor, node)
                     if nb_links_between_the_two == 0:
@@ -393,8 +391,8 @@ def remove_obvious_solutions(graph, solutions):
             for neighbor in node.neighbors:
                 nb_links_between_the_two = graph.nb_links(neighbor, node)
                 if nb_links_between_the_two == 0:
-                    graph.add_link(node, neighbor)
-                    solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+                    if graph.add_link(node, neighbor):
+                        solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
 
         if node.value == 8:
             # add all the links
@@ -407,8 +405,8 @@ def remove_obvious_solutions(graph, solutions):
 
                 elif nb_links_between_the_two == 1:
                     # Only one link can be placed
-                    graph.add_link(node, neighbor)
-                    solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+                    if graph.add_link(node, neighbor):
+                        solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
 
     print >> sys.stderr, 'Current graph: ' + str(graph)
     # now check all nodes that only have one possibility (i.e. nb_links = value - 1)
@@ -435,30 +433,6 @@ def remove_obvious_solutions(graph, solutions):
                         solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
                         # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 1"
                         to_inspect = [nd for nd in node_x_values if graph.get_nb_links_node(nd) == x - 1]
-                else:
-
-                    unfilled_neighbors_linkable = [t for t in unfilled_neighbors_linkable if graph.get_nb_links_node(t) != t.value - 1]
-                    # print >> sys.stderr, str(node) + ': Neighbors which have a 1 link possibility: ' + str(unfilled_neighbors_linkable)
-                    if len(unfilled_neighbors_linkable) == 1:
-                        neighbor = unfilled_neighbors_linkable[0]
-                        # print >> sys.stderr, 'Found an optimization between ' + str(node) + ' and ' + str(neighbor)
-                        if graph.add_link(node, neighbor):
-                            had_mod = True
-                            solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
-                            # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 1"
-                            to_inspect = [nd for nd in node_x_values if graph.get_nb_links_node(nd) == x - 1]
-                    else:
-                        # Filter those which value is not the current number
-                        unfilled_neighbors_linkable = [t for t in unfilled_neighbors_linkable if t.value == x]
-                        # print >> sys.stderr, str(node) + ': Possible neighbors with value set to ' + str(x) + ': ' + str(unfilled_neighbors_linkable)
-                        if len(unfilled_neighbors_linkable) == 1:
-                            neighbor = unfilled_neighbors_linkable[0]
-                            # print >> sys.stderr, 'Found an optimization between ' + str(node) + ' and ' + str(neighbor)
-                            if graph.add_link(node, neighbor):
-                                had_mod = True
-                                # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 1"
-                                solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
-                                to_inspect = [nd for nd in node_x_values if graph.get_nb_links_node(nd) == x - 1]
 
     print >> sys.stderr, 'End of optimizations.'
 
@@ -469,11 +443,13 @@ def find_sol_main(graph):
     remove_obvious_solutions(graph, solutions)
     time_optim = time.clock() - start_optim
     print >> sys.stderr, 'Time for optimization: ' + str(time_optim)
-    # print >> sys.stderr, 'Graph: ' + str(graph)
+    print >> sys.stderr, 'Graph: ' + str(graph)
     print >> sys.stderr, 'Launching recursive search...'
 
     start_rec = time.clock()
-    solutions.extend(find_sol(graph))
+    rec_solutions = find_sol(graph)
+    assert rec_solutions is not None
+    solutions.extend(rec_solutions)
     time_rec = time.clock() - start_rec
     print >> sys.stderr, 'Time for recursive search: ' + str(time_rec)
 
@@ -497,11 +473,11 @@ def choose_node_to_process(graph):
         return None
 
 
-def find_sol(graph):
+def find_sol(graph, depth=0):
     solution = []
     """ Returns the list of strings to print
     which are the links to create. """
-
+    print >> sys.stderr, 'Depth = ' + str(depth)
     node = choose_node_to_process(graph)
     if node is not None:
         # Get one of its unfilled neighbors that has less than
@@ -520,7 +496,7 @@ def find_sol(graph):
                     solution_string = node.to_solution_string() + " " +\
                         neighbor.to_solution_string() + " 1"
                     solution.append(solution_string)
-                    rec_sol = find_sol(graph)
+                    rec_sol = find_sol(graph, depth=depth + 1)
                     if rec_sol is not None:
                         solution.extend(rec_sol)
                         return solution
@@ -532,16 +508,19 @@ def find_sol(graph):
 
             # If we iterated on all neighbors but None could bring a solution,
             # it means there was a problem before, so return None.
+            # print >> sys.stderr, 'No neighbors possible to link, solution is incorrect.'
             return None
         else:
             # The current node being processed has unfilled links,
             # but no available neighbors: this is not a suitable
             # solution.
+            # print >> sys.stderr, 'No neighbors possible to link, solution is incorrect.'
             return None
     else:
         if graph.check_if_solution_ok():
             return solution
         else:
+            # print >> sys.stderr, 'Solution was not correct, backtracking'
             return None
 
 

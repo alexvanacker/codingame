@@ -43,6 +43,19 @@ class TestThereIsNoSpoon(unittest.TestCase):
         graph.add_link(n3, n4)
         self.assertFalse(graph.is_link_crossing_other_links(n1, n2))
 
+    def test_simple(self):
+        cell_matrix = ['1.3',
+                       '...',
+                       '123']
+        width = len(cell_matrix[0])
+        height = len(cell_matrix)
+        graph = tisn.Graph(cell_matrix, width, height)
+        solutions = tisn.find_sol_main(graph)
+        n1 = graph.get_point(0, 0)
+        n2 = graph.get_point(2, 0)
+        self.assertEquals(1, graph.nb_links(n1, n2), 'There should be only one link between ' + str(n1) + ' and ' + str(n2))
+        self.assertEquals(5, len(solutions), 'There should be only 5 links to place, found ' + str(len(solutions)))
+
 
 if __name__ == '__main__':
     unittest.main()

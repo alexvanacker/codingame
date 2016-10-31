@@ -314,6 +314,24 @@ class Graph:
         return x == 0 or x == self.width - 1 or y == 0 or y == self.height - 1
 
 
+def add_obvious_links(graph, solutions):
+    """ Add links which are obvious. """
+    has_mod = True
+    while has_mod:
+        has_mod = False
+        for node in graph.adj_list:
+            # 3 case: if it has only two neighbors, then add 1 link to each
+            if node.value == 3 and len(node.neighbors) == 2:
+                for neighbor in node.neighbors:
+                    if graph.nb_links(node, neighbor) == 0:
+                        if graph.add_link(node, neighbor):
+                            has_mod = True
+                            solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+
+
+
+
+
 def remove_obvious_solutions(graph, solutions):
     print >> sys.stderr, 'Optimization phase: removing obvious solutions.'
     # First easy step: set the obivous ones:
@@ -342,16 +360,17 @@ def remove_obvious_solutions(graph, solutions):
             neighbors_possible = [n for n in node.neighbors if n.value > 1]
             if len(neighbors_possible) == 1:
                 neighbor = neighbors_possible[0]
-                graph.add_link(node, neighbor)
-                solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+                if graph.nb_links(node, neighbor) == 0:
+                    if graph.add_link(node, neighbor):
+                        solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
                 # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 1"
 
         if node.value == 5 and graph.is_on_edge(node):
             # A 5 on an edge will have at least one link going from each direction.
             for neighbor in node.neighbors:
                 if graph.nb_links(neighbor, node) == 0:
-                    graph.add_link(node, neighbor)
-                    solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+                    if graph.add_link(node, neighbor):
+                        solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
 
         if node.value == 6:
             if graph.is_on_edge(node):

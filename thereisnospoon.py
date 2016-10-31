@@ -314,6 +314,7 @@ class Graph:
 
 
 def remove_obvious_solutions(graph, solutions):
+    print >> sys.stderr, 'Optimization phase: removing obvious solutions.'
     # First easy step: set the obivous ones:
     # 4s that are in corners
     # 6s that are on edges
@@ -344,27 +345,41 @@ def remove_obvious_solutions(graph, solutions):
                 solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
                 # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 1"
 
+        if node.value == 5 and graph.is_on_edge(node):
+            # A 5 on an edge will have at least one link going from each direction.
+            for neighbor in node.neighbors:
+                if graph.nb_links(neighbor, node) == 0:
+                    graph.add_link(node, neighbor)
+                    solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+
         if node.value == 6:
             if graph.is_on_edge(node):
-                print >> sys.stderr, 'Linking node on edge with value 6: ' + str(node)
                 for neighbor in node.neighbors:
-                    if graph.nb_links(neighbor, node) == 0:
+                    nb_links_between_the_two = graph.nb_links(neighbor, node)
+                    if nb_links_between_the_two == 0:
                         graph.add_two_links(node, neighbor)
                         solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 2")
-                        # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 2"
+
+                    elif nb_links_between_the_two == 1:
+                        # Only one link can be placed
+                        graph.add_link(node, neighbor)
+                        solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
 
         if node.value == 8:
             # add all the links
             for neighbor in node.neighbors:
-                if graph.nb_links(neighbor, node) == 0:
-                    print >> sys.stderr, 'Linking node with value 8: ' + str(node) + ' ' + str(neighbor)
+                nb_links_between_the_two = graph.nb_links(neighbor, node)
+                if nb_links_between_the_two == 0:
                     graph.add_two_links(node, neighbor)
-                    # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 2"
                     solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 2")
+
+                elif nb_links_between_the_two == 1:
+                    # Only one link can be placed
+                    graph.add_link(node, neighbor)
+                    solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
 
     print >> sys.stderr, 'Current graph: ' + str(graph)
     # now check all nodes that only have one possibility (i.e. nb_links = value - 1)
-    print >> sys.stderr, 'Optimization phase: removing obvious solutions.'
 
     for x in xrange(2, 8):
         # Check the nodes which value is x ...

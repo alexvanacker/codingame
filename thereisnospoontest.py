@@ -68,6 +68,18 @@ class TestThereIsNoSpoon(unittest.TestCase):
         n2 = graph.get_point(2, 3)
         self.assertEquals(8, len(solutions))
 
+    def test_intermediate_three(self):
+        cell_matrix = ['25.1',
+                       '47.4',
+                       '..1.',
+                       '3344']
+        width = 4
+        height = 4
+        graph = tisn.Graph(cell_matrix, width, height)
+        solutions = tisn.find_sol_main(graph)
+        self.assertTrue(solutions is not None)
+
+
 
 
 if __name__ == '__main__':

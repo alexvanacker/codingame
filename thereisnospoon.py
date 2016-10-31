@@ -327,6 +327,12 @@ def remove_obvious_solutions(graph, solutions):
                 solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 2")
                 # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 2"
 
+        # If a 3 is in a corner, it will at least have 1 link going in the two possible directions.
+        if node is not None and node.value == 3:
+            for neighbor in node.neighbors:
+                graph.add_link(node, neighbor)
+                solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+
     # 8s and 6s
     for node in graph.adj_list:
         if node.value == 1:

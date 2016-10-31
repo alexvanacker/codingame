@@ -422,19 +422,28 @@ def find_sol_main(graph):
     return solutions
 
 
+def choose_node_to_process(graph):
+    """ Returns the node on which we will try to add a link.
+    If all nodes are filled, returns None.
+    """
+    unfilled = [n for n in graph.adj_list if not graph.is_filled(n)]
+    if len(unfilled) > 0:
+        # Take node of lowest value: sort by number of possible links
+        # to place ascending
+        unfilled.sort(key=lambda x: x.value - len(graph.adj_list[x]))
+        return unfilled[0]
+
+    else:
+        return None
+
+
 def find_sol(graph):
     solution = []
     """ Returns the list of strings to print
     which are the links to create. """
 
-    # List of all nodes which need links
-    unfilled = [n for n in graph.adj_list if not graph.is_filled(n)]
-    if len(unfilled) > 0:
-        # Take node of lowest value: sort by value (ascending)
-        # then take the first one.
-        unfilled.sort(key=lambda x: x.value)
-        node = unfilled[0]
-
+    node = choose_node_to_process(graph)
+    if node is not None:
         # Get one of its unfilled neighbors that has less than
         # 2 links from node
         unfilled_neighbors = [m for m in node.neighbors
@@ -442,11 +451,10 @@ def find_sol(graph):
 
         unfilled_neighbors_linkable = [l for l in unfilled_neighbors
                                        if graph.nb_links(node, l) < 2]
-        # TODO check if link would cross another
 
         if len(unfilled_neighbors) > 0:
             # Sort neighbors by value, take the lowest one
-            unfilled_neighbors.sort(key=lambda x: x.value)
+            unfilled_neighbors.sort(key=lambda x: x.value - len(graph.adj_list[x]))
             for neighbor in unfilled_neighbors_linkable:
                 if graph.add_link(node, neighbor):
                     solution_string = node.to_solution_string() + " " +\
@@ -461,7 +469,14 @@ def find_sol(graph):
                         # remove the link, we don't have a solution there
                         graph.remove_link(node, neighbor)
                         del solution[-1]
+
+            # If we iterated on all neighbors but None could bring a solution,
+            # it means there was a problem before, so return None.
+            return None
         else:
+            # The current node being processed has unfilled links,
+            # but no available neighbors: this is not a suitable
+            # solution.
             return None
     else:
         if graph.check_if_solution_ok():

@@ -1,4 +1,5 @@
 import unittest
+import time
 import sys
 import thereisnospoon as tisn
 
@@ -81,6 +82,29 @@ class TestThereIsNoSpoon(unittest.TestCase):
         solutions = tisn.find_sol_main(graph)
         self.assertTrue(solutions is not None)
 
+    def test_cg(self):
+        print >> sys.stderr, 'Testing CG...'
+        cell_matrix = ['22221',
+                       '2....',
+                       '2....',
+                       '2....',
+                       '2....',
+                       '22321',
+                       '.....',
+                       '.....',
+                       '22321',
+                       '2....',
+                       '2....',
+                       '2.131',
+                       '2..2.',
+                       '2222.']
+        width = len(cell_matrix[0])
+        height = len(cell_matrix)
+        graph = tisn.Graph(cell_matrix, width, height)
+        start = time.clock()
+        solutions = tisn.find_sol_main(graph)
+        time_sol = time.clock() - start
+        self.assertTrue(time_sol < 1)
 
 if __name__ == '__main__':
     unittest.main()

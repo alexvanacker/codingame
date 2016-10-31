@@ -1,4 +1,5 @@
 import unittest
+import sys
 import thereisnospoon as tisn
 
 
@@ -69,6 +70,7 @@ class TestThereIsNoSpoon(unittest.TestCase):
         self.assertEquals(8, len(solutions))
 
     def test_intermediate_three(self):
+        print >> sys.stderr, 'Testing intermediate 3'
         cell_matrix = ['25.1',
                        '47.4',
                        '..1.',
@@ -78,8 +80,6 @@ class TestThereIsNoSpoon(unittest.TestCase):
         graph = tisn.Graph(cell_matrix, width, height)
         solutions = tisn.find_sol_main(graph)
         self.assertTrue(solutions is not None)
-
-
 
 
 if __name__ == '__main__':

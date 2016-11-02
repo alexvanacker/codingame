@@ -505,7 +505,7 @@ def choose_node_to_process(graph):
     """
     unfilled = [n for n in graph.adj_list if not graph.is_filled(n)]
     if len(unfilled) > 0:
-        # Take node of lowest value: sort by number of possible links
+        # sort by number of possible links
         # to place ascending
         unfilled.sort(key=lambda x: x.value - len(graph.adj_list[x]))
         return unfilled[0]
@@ -518,12 +518,12 @@ def find_sol(graph, depth=0):
     solution = []
     """ Returns the list of strings to print
     which are the links to create. """
-    # print >> sys.stderr, 'Depth = ' + str(depth)
-    obvious_sols = add_obvious_links(graph)
-    if obvious_sols is not None:
-        solution.extend(obvious_sols)
-    else:
-        return None
+    print >> sys.stderr, 'Depth = ' + str(depth)
+    # obvious_sols = add_obvious_links(graph)
+    # if obvious_sols is not None:
+    #     solution.extend(obvious_sols)
+    # else:
+    #     return None
 
     node = choose_node_to_process(graph)
     if node is not None:
@@ -533,13 +533,15 @@ def find_sol(graph, depth=0):
                               if not graph.is_filled(m)]
 
         unfilled_neighbors_linkable = [l for l in unfilled_neighbors
-                                       if graph.nb_links(node, l) < 2]
+                                       if graph.nb_links(node, l) < 2 and graph.link_will_not_create_an_island(node, l)]
 
-        if len(unfilled_neighbors) > 0:
+        if len(unfilled_neighbors_linkable) > 0:
             # Sort neighbors by value, take the lowest one
-            unfilled_neighbors.sort(key=lambda x: x.value - len(graph.adj_list[x]))
+            unfilled_neighbors_linkable.sort(key=lambda x: x.value - len(graph.adj_list[x]))
+
             for neighbor in unfilled_neighbors_linkable:
                 if graph.add_link(node, neighbor):
+                    print >> sys.stderr, 'Added link from ' + str(node) + ' to ' + str(neighbor)
                     solution_string = node.to_solution_string() + " " +\
                         neighbor.to_solution_string() + " 1"
                     solution.append(solution_string)

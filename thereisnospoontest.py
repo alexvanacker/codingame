@@ -150,6 +150,22 @@ class Test(unittest.TestCase):
       solutions = tisn.find_sol_main(graph)
       self.assertEquals(12, len(solutions))
 
+    def test_advanced_two(self):
+      cell_matrix = ['3.....1..',
+                     '.2..4..21',
+                     '.3.2..1..',
+                     '..2.5.3..',
+                     '.3...3.3.',
+                     '......2..',
+                     '..2..3..3',
+                     '.3..3.3..',
+                     '3......44']
+      width = len(cell_matrix[0])
+      height = len(cell_matrix)
+      graph = tisn.Graph(cell_matrix, width, height)
+      solutions = tisn.find_sol_main(graph)
+      self.assertNotEquals(None, solutions)
+
 
 if __name__ == '__main__':
     unittest.main()

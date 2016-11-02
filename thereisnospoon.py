@@ -313,6 +313,29 @@ class Graph:
         y = node.y
         return x == 0 or x == self.width - 1 or y == 0 or y == self.height - 1
 
+    def link_will_not_create_an_island(self, node1, node2):
+        """ Returns True of the link will not cut off part of the graph. """
+        # Add the link in the graph
+        self.add_link(node1, node2)
+        result = False
+        linked_to_node1_dict = self.depth_first_search(node1)
+        linked_to_node1 = {k for (k, v) in linked_to_node1_dict.iteritems() if v}
+        # If all nodes are connected, the island is the graph, so we're ok
+        if len(linked_to_node1) == len(self.adj_list):
+            result = True
+        else:
+            # Check that all the linked are not filled
+            all_linked_are_filled = True
+            for node in linked_to_node1:
+                if self.get_nb_links_node(node) < node.value:
+                    all_linked_are_filled = False
+                    break
+            result = not all_linked_are_filled
+
+        # Remove the link for now
+        self.remove_link(node1, node2)
+        return result
+
 
 def add_obvious_links(graph):
     """ Returns list of links which are obvious. If an error occurs, returns None.
@@ -320,6 +343,7 @@ def add_obvious_links(graph):
 
     """
     solutions = []
+    original_graph = graph
     has_mod = True
     while has_mod:
         has_mod = False
@@ -343,7 +367,27 @@ def add_obvious_links(graph):
                     else:
                         # There was en error, when only one possible neighbor is remaining.
                         # The graph is not a possible solution.
+                        graph = original_graph
                         return None
+
+            else:
+                if nb_links_to_set == 1:
+                    # Check neighbors which, if we add the link, do not create an island
+                    possible_neighbors = [n for n in possible_neighbors if graph.link_will_not_create_an_island(node, n)]
+                    if len(possible_neighbors) == 1:
+                        neighbor = possible_neighbors[0]
+                        # Only one possible neighbor, let's add as many links as we can. If there is an error, return False
+                        print >> sys.stderr, 'Obvious link to set between {} and {}'.format(str(node), str(neighbor))
+                        for i in xrange(nb_links_to_set):
+                            if graph.add_link(node, neighbor):
+                                has_mod = True
+                                solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+                            else:
+                                # There was en error, when only one possible neighbor is remaining.
+                                # The graph is not a possible solution.
+                                graph = original_graph
+                                return None
+
     return solutions
 
 
@@ -429,28 +473,7 @@ def remove_obvious_solutions(graph, solutions):
     print >> sys.stderr, 'Current graph: ' + str(graph)
     # now check all nodes that only have one possibility (i.e. nb_links = value - 1)
 
-    for x in xrange(2, 8):
-        # Check the nodes which value is x ...
-        node_x_values = [n for n in graph.adj_list if n.value == x]
-        # ... and which has x - 1 links already. For example: Nodes with value 2 with 1 link already set.
-        to_inspect = [m for m in node_x_values if graph.get_nb_links_node(m) == x - 1]
-        had_mod = True
-        while(had_mod):
-            had_mod = False
-            # print >> sys.stderr, 'Value ' + str(x) + ': inspect list: ' + str(to_inspect)
-            for node in to_inspect:
-                unfilled_neighbors = [m for m in node.neighbors if not graph.is_filled(m)]
-                unfilled_neighbors_linkable = [l for l in unfilled_neighbors if graph.nb_links(node, l) < 2]
-
-                # print >> sys.stderr, str(node) + ': Unfilled neighbors linkable: ' + str(unfilled_neighbors_linkable)
-                if len(unfilled_neighbors_linkable) == 1:
-                    neighbor = unfilled_neighbors_linkable[0]
-                    # print >> sys.stderr, 'Found an optimization between ' + str(node) + ' and ' + str(neighbor)
-                    if graph.add_link(node, neighbor):
-                        had_mod = True
-                        solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
-                        # print node.to_solution_string()+" "+neighbor.to_solution_string() + " 1"
-                        to_inspect = [nd for nd in node_x_values if graph.get_nb_links_node(nd) == x - 1]
+    solutions.extend(add_obvious_links(graph))
 
     print >> sys.stderr, 'End of optimizations.'
 

@@ -138,5 +138,18 @@ class Test(unittest.TestCase):
         time_sol = time.clock() - start
         self.assertTrue(time_sol < 1)
 
+    def test_intermediate_three_other(self):
+      cell_matrix = ['3..41',
+                     '.22..',
+                     '..1.1',
+                     '.2.2.',
+                     '3...3']
+      width = len(cell_matrix[0])
+      height = len(cell_matrix)
+      graph = tisn.Graph(cell_matrix, width, height)
+      solutions = tisn.find_sol_main(graph)
+      self.assertEquals(12, len(solutions))
+
+
 if __name__ == '__main__':
     unittest.main()

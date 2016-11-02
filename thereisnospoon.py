@@ -521,7 +521,6 @@ def find_sol(graph, depth=0):
     solution = []
     """ Returns the list of strings to print
     which are the links to create. """
-    print >> sys.stderr, 'Depth = ' + str(depth)
     # obvious_sols = add_obvious_links(graph)
     # if obvious_sols is not None:
     #     solution.extend(obvious_sols)
@@ -544,7 +543,7 @@ def find_sol(graph, depth=0):
 
             for neighbor in unfilled_neighbors_linkable:
                 if graph.add_link(node, neighbor):
-                    print >> sys.stderr, 'Added link from ' + str(node) + ' to ' + str(neighbor)
+                    # print >> sys.stderr, 'Added link from ' + str(node) + ' to ' + str(neighbor)
                     solution_string = node.to_solution_string() + " " +\
                         neighbor.to_solution_string() + " 1"
                     solution.append(solution_string)

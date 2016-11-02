@@ -98,7 +98,6 @@ class Test(unittest.TestCase):
       will_create = graph.link_will_not_create_an_island(node3, node4)
       self.assertTrue(will_create, 'Link would not create an island.')
 
-
     def test_obvious_links(self):
       """ This test should not need recursion. We check that
       it returns the appropriate number of links after the
@@ -112,7 +111,6 @@ class Test(unittest.TestCase):
       graph = tisn.Graph(cell_matrix, width, height)
       solutions = []
       tisn.remove_obvious_solutions(graph, solutions)
-      solutions.extend(tisn.add_obvious_links(graph))
       print >> sys.stderr, 'Final graph: ' + str(graph)
       self.assertEquals(10, len(solutions))
 

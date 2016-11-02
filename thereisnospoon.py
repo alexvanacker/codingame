@@ -134,14 +134,14 @@ class Graph:
     def add_link(self, node1, node2):
         # print >> sys.stderr, 'Adding link between '+str(node1)+' and ' + str(node2)
         if len(self.adj_list[node1]) >= node1.value:
-            print >> sys.stderr, 'Cannot add a link between ' + str(node1) + ' and ' + str(node2)
+            print >> sys.stderr, 'Cannot add a link between {} and {}: {} is filled.'.format(str(node1), str(node2), str(node1))
             return False
         if len(self.adj_list[node2]) >= node2.value:
-            print >> sys.stderr, 'Cannot add a link between ' + str(node2) + ' and ' + str(node1)
+            print >> sys.stderr, 'Cannot add a link between {} and {}: {} is filled with {}'.format(str(node1), str(node2), str(node2), str(self.adj_list[node2]))
             return False
 
         if self.adj_list[node1].count(node2) == 2:
-            print >> sys.stderr, 'Already two links, cannot add more between the nodes.'
+            print >> sys.stderr, 'Already two links, cannot add more between {} and {}'.format(str(node1), str(node2))
             return False
 
         # if self.is_link_crossing_other_links(node1, node2):
@@ -351,42 +351,43 @@ def add_obvious_links(graph):
 
             # Number of links to set
             nb_links_to_set = node.value - graph.get_nb_links_node(node)
+            if nb_links_to_set != 0:
 
-            # Number of possible neighbors
-            possible_neighbors = [neighbor for neighbor in node.neighbors if graph.get_nb_links_node(neighbor) < neighbor.value and
-                                  graph.nb_links(node, neighbor) < 2]
+                # Number of possible neighbors
+                possible_neighbors = [neighbor for neighbor in node.neighbors if graph.get_nb_links_node(neighbor) < neighbor.value and
+                                      graph.nb_links(node, neighbor) < 2]
 
-            if len(possible_neighbors) == 1:
-                neighbor = possible_neighbors[0]
-                # Only one possible neighbor, let's add as many links as we can. If there is an error, return False
-                print >> sys.stderr, 'Obvious link to set between {} and {}'.format(str(node), str(neighbor))
-                for i in xrange(nb_links_to_set):
-                    if graph.add_link(node, neighbor):
-                        has_mod = True
-                        solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
-                    else:
-                        # There was en error, when only one possible neighbor is remaining.
-                        # The graph is not a possible solution.
-                        graph = original_graph
-                        return None
+                if len(possible_neighbors) == 1:
+                    neighbor = possible_neighbors[0]
+                    # Only one possible neighbor, let's add as many links as we can. If there is an error, return False
+                    print >> sys.stderr, 'Obvious link to set between {} and {}, with {} links'.format(str(node), str(neighbor), str(nb_links_to_set))
+                    for i in xrange(nb_links_to_set):
+                        if graph.add_link(node, neighbor):
+                            has_mod = True
+                            solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+                        else:
+                            # There was en error, when only one possible neighbor is remaining.
+                            # The graph is not a possible solution.
+                            graph = original_graph
+                            return None
 
-            else:
-                if nb_links_to_set == 1:
-                    # Check neighbors which, if we add the link, do not create an island
-                    possible_neighbors = [n for n in possible_neighbors if graph.link_will_not_create_an_island(node, n)]
-                    if len(possible_neighbors) == 1:
-                        neighbor = possible_neighbors[0]
-                        # Only one possible neighbor, let's add as many links as we can. If there is an error, return False
-                        print >> sys.stderr, 'Obvious link to set between {} and {}'.format(str(node), str(neighbor))
-                        for i in xrange(nb_links_to_set):
-                            if graph.add_link(node, neighbor):
-                                has_mod = True
-                                solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
-                            else:
-                                # There was en error, when only one possible neighbor is remaining.
-                                # The graph is not a possible solution.
-                                graph = original_graph
-                                return None
+                else:
+                    if nb_links_to_set == 1:
+                        # Check neighbors which, if we add the link, do not create an island
+                        possible_neighbors = [n for n in possible_neighbors if graph.link_will_not_create_an_island(node, n)]
+                        if len(possible_neighbors) == 1:
+                            neighbor = possible_neighbors[0]
+                            # Only one possible neighbor, let's add as many links as we can. If there is an error, return False
+                            print >> sys.stderr, 'Obvious link to set between {} and {} as only possibility without island creation.'.format(str(node), str(neighbor))
+                            for i in xrange(nb_links_to_set):
+                                if graph.add_link(node, neighbor):
+                                    has_mod = True
+                                    solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+                                else:
+                                    # There was en error, when only one possible neighbor is remaining.
+                                    # The graph is not a possible solution.
+                                    graph = original_graph
+                                    return None
 
     return solutions
 
@@ -414,8 +415,10 @@ def remove_obvious_solutions(graph, solutions):
         # If a 3 is in a corner, it will at least have 1 link going in the two possible directions.
         if node is not None and node.value == 3:
             for neighbor in node.neighbors:
-                if graph.add_link(node, neighbor):
-                    solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
+                nb_links = graph.nb_links(node, neighbor)
+                if nb_links == 0:
+                    if graph.add_link(node, neighbor):
+                        solutions.append(node.to_solution_string() + " " + neighbor.to_solution_string() + " 1")
 
     for node in graph.adj_list:
         if node.value == 1:

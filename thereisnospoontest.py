@@ -4,7 +4,7 @@ import sys
 import thereisnospoon as tisn
 
 
-class TestThereIsNoSpoon(unittest.TestCase):
+class Test(unittest.TestCase):
 
     def test_detect_crossed_links(self):
         cell_matrix = ['..1..1',

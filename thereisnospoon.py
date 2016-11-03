@@ -521,11 +521,13 @@ def find_sol(graph, depth=0):
     solution = []
     """ Returns the list of strings to print
     which are the links to create. """
-    # obvious_sols = add_obvious_links(graph)
-    # if obvious_sols is not None:
-    #     solution.extend(obvious_sols)
-    # else:
-    #     return None
+    obvious_sols = add_obvious_links(graph)
+    if obvious_sols is not None:
+        solution.extend(obvious_sols)
+    else:
+        print >> sys.stderr, 'Failure to add obvious links, current graph is incorrent'
+        print >> sys.stderr, str(graph)
+        return None
 
     node = choose_node_to_process(graph)
     if node is not None:
@@ -543,7 +545,7 @@ def find_sol(graph, depth=0):
 
             for neighbor in unfilled_neighbors_linkable:
                 if graph.add_link(node, neighbor):
-                    # print >> sys.stderr, 'Added link from ' + str(node) + ' to ' + str(neighbor)
+                    print >> sys.stderr, 'Recursive step: added link from ' + str(node) + ' to ' + str(neighbor)
                     solution_string = node.to_solution_string() + " " +\
                         neighbor.to_solution_string() + " 1"
                     solution.append(solution_string)
@@ -555,6 +557,7 @@ def find_sol(graph, depth=0):
                     else:
                         # remove the link, we don't have a solution there
                         graph.remove_link(node, neighbor)
+                        print >> sys.stderr, 'Recursive step: removing link from ' + str(node) + ' to ' + str(neighbor)
                         del solution[-1]
 
             # If we iterated on all neighbors but None could bring a solution,

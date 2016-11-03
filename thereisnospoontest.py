@@ -83,36 +83,36 @@ class Test(unittest.TestCase):
         self.assertTrue(solutions is not None)
 
     def test_island_creation(self):
-      cell_matrix = ['21',
-                     '21']
-      width = len(cell_matrix[0])
-      height = len(cell_matrix)
-      graph = tisn.Graph(cell_matrix, width, height)
-      node1 = graph.get_point(1, 0)
-      node2 = graph.get_point(1, 1)
-      will_create = graph.link_will_not_create_an_island(node1, node2)
-      self.assertFalse(will_create, 'Link would create an island.')
+        cell_matrix = ['21',
+                       '21']
+        width = len(cell_matrix[0])
+        height = len(cell_matrix)
+        graph = tisn.Graph(cell_matrix, width, height)
+        node1 = graph.get_point(1, 0)
+        node2 = graph.get_point(1, 1)
+        will_create = graph.link_will_not_create_an_island(node1, node2)
+        self.assertFalse(will_create, 'Link would create an island.')
 
-      node3 = graph.get_point(0, 0)
-      node4 = graph.get_point(0, 1)
-      will_create = graph.link_will_not_create_an_island(node3, node4)
-      self.assertTrue(will_create, 'Link would not create an island.')
+        node3 = graph.get_point(0, 0)
+        node4 = graph.get_point(0, 1)
+        will_create = graph.link_will_not_create_an_island(node3, node4)
+        self.assertTrue(will_create, 'Link would not create an island.')
 
     def test_obvious_links(self):
-      """ This test should not need recursion. We check that
-      it returns the appropriate number of links after the
-      first optimization calls."""
+        """ This test should not need recursion. We check that
+        it returns the appropriate number of links after the
+        first optimization calls."""
 
-      cell_matrix = ['22221',
-                     '2....',
-                     '22221']
-      width = len(cell_matrix[0])
-      height = len(cell_matrix)
-      graph = tisn.Graph(cell_matrix, width, height)
-      solutions = []
-      tisn.remove_obvious_solutions(graph, solutions)
-      print >> sys.stderr, 'Final graph: ' + str(graph)
-      self.assertEquals(10, len(solutions))
+        cell_matrix = ['22221',
+                       '2....',
+                       '22221']
+        width = len(cell_matrix[0])
+        height = len(cell_matrix)
+        graph = tisn.Graph(cell_matrix, width, height)
+        solutions = []
+        tisn.remove_obvious_solutions(graph, solutions)
+        print >> sys.stderr, 'Final graph: ' + str(graph)
+        self.assertEquals(10, len(solutions))
 
     def test_cg(self):
         print >> sys.stderr, 'Testing CG...'
@@ -139,32 +139,32 @@ class Test(unittest.TestCase):
         self.assertTrue(time_sol < 1)
 
     def test_intermediate_three_other(self):
-      cell_matrix = ['3..41',
-                     '.22..',
-                     '..1.1',
-                     '.2.2.',
-                     '3...3']
-      width = len(cell_matrix[0])
-      height = len(cell_matrix)
-      graph = tisn.Graph(cell_matrix, width, height)
-      solutions = tisn.find_sol_main(graph)
-      self.assertEquals(12, len(solutions))
+        cell_matrix = ['3..41',
+                       '.22..',
+                       '..1.1',
+                       '.2.2.',
+                       '3...3']
+        width = len(cell_matrix[0])
+        height = len(cell_matrix)
+        graph = tisn.Graph(cell_matrix, width, height)
+        solutions = tisn.find_sol_main(graph)
+        self.assertEquals(12, len(solutions))
 
     def test_advanced_two(self):
-      cell_matrix = ['3.....1..',
-                     '.2..4..21',
-                     '.3.2..1..',
-                     '..2.5.3..',
-                     '.3...3.3.',
-                     '......2..',
-                     '..2..3..3',
-                     '.3..3.3..',
-                     '3......44']
-      width = len(cell_matrix[0])
-      height = len(cell_matrix)
-      graph = tisn.Graph(cell_matrix, width, height)
-      solutions = tisn.find_sol_main(graph)
-      self.assertNotEquals(None, solutions)
+        cell_matrix = ['3.....1..',
+                       '.2..4..21',
+                       '.3.2..1..',
+                       '..2.5.3..',
+                       '.3...3.3.',
+                       '......2..',
+                       '..2..3..3',
+                       '.3..3.3..',
+                       '3......44']
+        width = len(cell_matrix[0])
+        height = len(cell_matrix)
+        graph = tisn.Graph(cell_matrix, width, height)
+        solutions = tisn.find_sol_main(graph)
+        self.assertNotEquals(None, solutions)
 
 
 if __name__ == '__main__':

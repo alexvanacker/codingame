@@ -27,7 +27,7 @@ class Test(unittest.TestCase):
         actions = bender.process(map_array, lines, columns)
         self.assertEquals(['SOUTH', 'SOUTH'], actions)
 
-    def testSimpleCorner(self):
+    def testLoopDetect(self):
         map_array = ['#####',
                      '#$  #',
                      '#   #',
@@ -38,7 +38,7 @@ class Test(unittest.TestCase):
         actions = bender.process(map_array, lines, columns)
         self.assertEquals(['EAST', 'EAST',
                            'NORTH', 'NORTH',
-                           'WEST', 'WEST'], actions)
+                           'SOUTH', 'SOUTH', 'LOOP'], actions)
 
     def testInverter(self):
         map_array = ['#####',
@@ -65,3 +65,63 @@ class Test(unittest.TestCase):
         self.assertEquals(['SOUTH', 'EAST',
                            'NORTH', 'EAST',
                            'EAST'], actions)
+
+
+    def testCase2(self):
+        map_array = ['########',
+                     '# @    #',
+                     '#     X#',
+                     '# XXX  #',
+                     '#   XX #',
+                     '#   XX #',
+                     '#     $#',
+                     '########']
+        lines = 8
+        columns = 8
+        actions = bender.process(map_array, lines, columns)
+        self.assertEquals(['SOUTH', 'EAST',
+                           'EAST', 'EAST', 'SOUTH',
+                           'EAST', 'SOUTH',
+                           'SOUTH', 'SOUTH'], actions)
+
+    def testObstacleEastToSouth(self):
+        map_array =['####',
+                    '#@ X',
+                    '##$#']
+        lines = 3
+        columns = 4
+        actions = bender.process(map_array, lines, columns)
+        self.assertEquals(['EAST', 'SOUTH'] , actions)
+
+    def testpathModifier(self):
+        map_array = ['##########',
+                     '#        #',
+                     '#  S   W #',
+                     '#        #',
+                     '#  $     #',
+                     '#        #',
+                     '#@       #',
+                     '#        #',
+                     '#E     N #',
+                     '##########']
+        lines = 10
+        columns = 10
+        actions = bender.process(map_array, lines, columns)
+        expected = ['SOUTH', 'SOUTH', 'EAST','EAST','EAST','EAST','EAST','EAST',
+                    'NORTH', 'NORTH','NORTH','NORTH','NORTH','NORTH',
+                    'WEST', 'WEST', 'WEST', 'WEST', 'SOUTH', 'SOUTH']
+        self.assertEquals(expected, actions)
+
+
+    def testBreaker(self):
+        map_array = ['#######',
+                     '#@    #',
+                     '#B    #',
+                     '#X    #',
+                     '#$    #'
+                     '#######']
+        lines = 5
+        columns = 7
+        actions = bender.process(map_array, lines, columns)
+        expected= ['SOUTH', 'SOUTH', 'SOUTH']
+        self.assertEquals(expected, actions)

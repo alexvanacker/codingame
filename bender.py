@@ -27,7 +27,21 @@ class Map:
                     return (x, y)
 
     def remove_obstacle(self, x, y):
-        self.array[x][y] = ' '
+
+        new_map_array = []
+        for i, column in enumerate(self.array):
+            if i != x:
+                new_map_array.append(self.array[i])
+            else:
+                new_column = []
+                for j, cell in enumerate(self.array[i]):
+                    if j == y:
+                        new_column.append(' ')
+                    else:
+                        new_column.append(cell)
+
+                new_map_array.append(new_column)
+        self.array = new_map_array
 
 
 class BenderState:

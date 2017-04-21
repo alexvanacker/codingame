@@ -36,6 +36,7 @@ class Map:
                 new_column = []
                 for j, cell in enumerate(self.array[i]):
                     if j == y:
+                        print >> sys.stderr, 'Removing obstacle at {} {}'.format(x,y)
                         new_column.append(' ')
                     else:
                         new_column.append(cell)
@@ -94,13 +95,17 @@ class BenderState:
         elif cell_type == 'B':
             self.position = (cell_x, cell_y)
             self.breaker_mode = not self.breaker_mode
+            print >> sys.stderr, 'Beer! breaker mode is {}'.format(self.breaker_mode)
+
         elif cell_type == 'X':
             if self.breaker_mode:
                 # Break
                 self.position = (cell_x, cell_y)
                 # Remove X from map
                 mmap.remove_obstacle(cell_x, cell_y)
-                pass
+                # Remove history => map has changed
+                self.history = {}
+                print >> sys.stderr, 'Restarting history'
             else:
                 self.direction_index = self.direction_index + self.direction_increment
                 self.current_dir = self.directions[self.direction_index]
@@ -108,19 +113,15 @@ class BenderState:
 
         elif cell_type == 'N':
             self.position = (cell_x, cell_y)
-            # self.current_dir = 'NORTH'
             print >> sys.stderr, 'Modifier: going NORTH'
         elif cell_type == 'S':
             self.position = (cell_x, cell_y)
-            #self.current_dir = 'SOUTH'
             print >> sys.stderr, 'Modifier: going SOUTH'
         elif cell_type == 'E':
             self.position = (cell_x, cell_y)
-            # self.current_dir = 'EAST'
             print >> sys.stderr, 'Modifier: going EAST'
         elif cell_type == 'W':
             self.position = (cell_x, cell_y)
-            # self.current_dir = 'WEST'
             print >> sys.stderr, 'Modifier: going WEST'
         elif cell_type == 'T':
             (other_x, other_y) = mmap.get_other_teleport(cell_x, cell_y)
@@ -185,15 +186,13 @@ class BenderState:
             self = self.next(map, next_pos)
             if self.position != (x, y):
                 print >> sys.stderr, 'Moving to {}'.format(str(self.position))
-                print old_dir
+                # print old_dir
                 no_loop = self.add_history(x, y, old_dir)
                 if not no_loop:
-                    print 'LOOP'
-                    actions_array.append('LOOP')
+                    actions_array = ['LOOP']
                     return actions_array
                 actions_array.append(old_dir)
                 self.reset_direction_state()
-
 
         return actions_array
 
@@ -204,16 +203,21 @@ def process(map_array, lines, columns):
     actions = state.run(mmap)
     return actions
 
+
 def main():
     l, c = [int(i) for i in raw_input().split()]
-    print >> sys.stderr, "l=" + str(l) + ", c="+str(c)
+    print >> sys.stderr, "l=" + str(l) + ", c=" + str(c)
     map_array = []
     for i in xrange(l):
         row = raw_input()
         print >> sys.stderr, row
         map_array.append(row)
-    process(map_array, l, c)
-    
+    actions = process(map_array, l, c)
+    if 'LOOP' in actions:
+        print 'LOOP'
+    else:
+        for a in actions:
+            print a
 
 
 

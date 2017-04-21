@@ -43,6 +43,14 @@ class Map:
                 new_map_array.append(new_column)
         self.array = new_map_array
 
+    def get_other_teleport(self, x, y):
+        for i in range(0, self.l):
+            for j in range(0, self.c):
+                if self.array[i][j] == 'T':
+                    if i != x or j != y:
+                        return (i, j)
+        raise Exception('Could not find other teleport')
+
 
 class BenderState:
 
@@ -81,7 +89,7 @@ class BenderState:
             # move to the cell
             self.position = (cell_x, cell_y)
             # Change the direction increment
-            self.direction_increment = -self.direction_increment
+            self.directions.reverse()
 
         elif cell_type == 'B':
             self.position = (cell_x, cell_y)
@@ -114,6 +122,10 @@ class BenderState:
             self.position = (cell_x, cell_y)
             # self.current_dir = 'WEST'
             print >> sys.stderr, 'Modifier: going WEST'
+        elif cell_type == 'T':
+            (other_x, other_y) = mmap.get_other_teleport(cell_x, cell_y)
+            self.position = (other_x, other_y)
+            print >> sys.stderr, 'Going to teleport at {}'.format(str(self.position))
 
         else:
             raise Exception('Non handled cell type ' + str(cell_type))
@@ -126,17 +138,16 @@ class BenderState:
 
     def add_history(self, x, y, direction):
         """ Returns True if added, False if a loop is detected """
-        if (x,y) not in self.history:
-            self.history[(x,y)] = []
+        if (x, y) not in self.history:
+            self.history[(x, y)] = []
 
-        dirs = self.history.get((x,y))
+        dirs = self.history.get((x, y))
         if direction in dirs:
             print >> sys.stderr, "LOOP DETECTED"
             return False
         else:
-            self.history.get((x,y)).append(direction)
+            self.history.get((x, y)).append(direction)
             return True
-        
 
     def run(self, map):
         actions_array = []

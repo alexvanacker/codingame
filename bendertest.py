@@ -36,9 +36,7 @@ class Test(unittest.TestCase):
         lines = 5
         columns = 5
         actions = bender.process(map_array, lines, columns)
-        self.assertEquals(['EAST', 'EAST',
-                           'NORTH', 'NORTH',
-                           'SOUTH', 'SOUTH', 'LOOP'], actions)
+        self.assertEquals(['LOOP'], actions)
 
     def testInverter(self):
         map_array = ['##########',

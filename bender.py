@@ -65,7 +65,7 @@ class BenderState:
         self.current_dir = 'SOUTH'
         self.position = map.get_starting_point()
         self.done = False
-        # For detecting loops, keep the cell and direction
+        # For detecting loops, keep the cell and direction, breakermode
         self.history = {}
 
     def next(self, mmap, (cell_x, cell_y)):
@@ -181,13 +181,16 @@ class BenderState:
                 next_pos = (x, y - 1)
 
             old_dir = self.current_dir
-
+            history_length = len(self.history)
             print >> sys.stderr, 'Trying direction {}'.format(self.current_dir)
             self = self.next(map, next_pos)
             if self.position != (x, y):
                 print >> sys.stderr, 'Moving to {}'.format(str(self.position))
                 # print old_dir
-                no_loop = self.add_history(x, y, old_dir)
+                if history_length == len(self.history):
+                    no_loop = self.add_history(x, y, old_dir)
+                else:
+                    print >> sys.stderr, 'Not inserting move in history'
                 if not no_loop:
                     actions_array = ['LOOP']
                     return actions_array

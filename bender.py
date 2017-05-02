@@ -57,26 +57,10 @@ class Map:
         Note: x is from down to up, and y from left to right
         """
 
-        x_increment = 0
-        y_increment = 0
-        if direction == 'SOUTH':
-            x_increment = 1
-            y_increment = 0
-        elif direction == 'NORTH':
-            x_increment = -1
-            y_increment = 0
-        elif direction == 'EAST':
-            x_increment = 0
-            y_increment = -1
-        elif direction == 'WEST':
-            x_increment = 0
-            y_increment = 1
-        else:
-            raise Exception('Unhandled direction : '.format(direction))
-
+        (x_increment, y_increment) = get_position_increments_for_direction(direction)
         new_x = x + x_increment
         new_y = y + y_increment
-        print >> sys.stderr, 'Getting cell at {}'.format((str(new_x), str(new_y)))
+        # print >> sys.stderr, 'Getting cell at {}'.format((str(new_x), str(new_y)))
         new_cell_type = self.get(new_x, new_y)
 
         return (new_x, new_y, new_cell_type)
@@ -86,7 +70,6 @@ class BenderState:
 
     def __init__(self, map):
         # Should be the same as direction_increment
-        self.inversion_activated = False
         self.breaker_mode = False
         self.directions = ['SOUTH', 'EAST', 'NORTH', 'WEST']
         self.direction_index = -1
@@ -94,147 +77,120 @@ class BenderState:
         self.current_dir = 'SOUTH'
         self.position = map.get_starting_point()
         self.done = False
-        # For detecting loops, keep the cell and direction, breakermode
-        self.history = {}
+        self.history = []
+        self.direction_history = []
 
     def next2(self, mmap):
+        """ A more 'FSM' implementation """
         # Get the next cell according to the direction
-        pass
-
-    def next(self, mmap, (cell_x, cell_y)):
-        ''' Change the state given the cell we go to '''
-        cell_type = mmap.get(cell_x, cell_y)
-        if cell_type == '#':
-            # Try next direction
-
-            self.direction_index = self.direction_index + self.direction_increment
-            self.current_dir = self.directions[self.direction_index]
-            print >> sys.stderr, 'Obstacle, trying to change direction to {}' .format(self.current_dir)
-
-        elif cell_type == ' ':
-            #  Move in the current direction
-            self.position = (cell_x, cell_y)
-
-        elif cell_type == '$':
-            self.position = (cell_x, cell_y)
-            self.done = True
-
-        elif cell_type == 'I':
-            # move to the cell
-            self.position = (cell_x, cell_y)
-            # Change the direction increment
-            self.directions.reverse()
-
+        (next_x, next_y, cell_type) = mmap.get_cell_with_direction(self.position[0], self.position[1], self.current_dir)
+        if cell_type == ' ':
+            self.move()
         elif cell_type == 'B':
-            self.position = (cell_x, cell_y)
-            self.breaker_mode = not self.breaker_mode
-            print >> sys.stderr, 'Beer! breaker mode is {}'.format(self.breaker_mode)
-
+            self.move()
+            self.change_breaker_mode()
+        elif cell_type == '$':
+            self.move()
+            self.finish()
         elif cell_type == 'X':
             if self.breaker_mode:
-                # Break
-                self.position = (cell_x, cell_y)
-                # Remove X from map
-                mmap.remove_obstacle(cell_x, cell_y)
-                # Remove history => map has changed
-                self.history = {}
-                print >> sys.stderr, 'Restarting history'
+                mmap.remove_obstacle(next_x, next_y)
+                self.move()
             else:
-                self.direction_index = self.direction_index + self.direction_increment
-                self.current_dir = self.directions[self.direction_index]
-                print >> sys.stderr, 'Obstacle, trying to change direction to {}' .format(self.current_dir)
-
-        elif cell_type == 'N':
-            self.position = (cell_x, cell_y)
-            print >> sys.stderr, 'Modifier: going NORTH'
-        elif cell_type == 'S':
-            self.position = (cell_x, cell_y)
-            print >> sys.stderr, 'Modifier: going SOUTH'
-        elif cell_type == 'E':
-            self.position = (cell_x, cell_y)
-            print >> sys.stderr, 'Modifier: going EAST'
-        elif cell_type == 'W':
-            self.position = (cell_x, cell_y)
-            print >> sys.stderr, 'Modifier: going WEST'
+                self.change_direction()
+        elif cell_type == '#':
+            self.change_direction()
+        elif cell_type == 'I':
+            self.invert_directions()
+            self.move()
         elif cell_type == 'T':
-            (other_x, other_y) = mmap.get_other_teleport(cell_x, cell_y)
-            self.position = (other_x, other_y)
-            print >> sys.stderr, 'Going to teleport at {}'.format(str(self.position))
-
+            self.move()
+            self.teleport(next_x, next_y, mmap)
+        elif cell_type in ['N', 'S', 'W', 'E']:
+            self.move()
+            self.set_direction(cell_type)
         else:
-            raise Exception('Non handled cell type ' + str(cell_type))
+            raise Exception('Unhandled cell type {} at {}'.format(cell_type, (next_x, next_y)))
 
-        return self
+    def teleport(self, x, y, mmap):
+        (other_x, other_y) = mmap.get_other_teleport(x, y)
+        self.position = (other_x, other_y)
+        print >> sys.stderr, 'Going to teleport at {}'.format(str(self.position))
+
+    def set_direction(self, direction_letter):
+        """ Change direction because of direction modifier. """
+        if direction_letter == 'N':
+            self.current_dir = 'NORTH'
+        elif direction_letter == 'S':
+            self.current_dir = 'SOUTH'
+        elif direction_letter == 'W':
+            self.current_dir = 'WEST'
+        elif direction_letter == 'E':
+            self.current_dir = 'EAST'
+        print >> sys.stderr, 'Changing direction to {}'.format(self.current_dir)
+
+    def invert_directions(self):
+        self.directions.reverse()
+        print >> sys.stderr, 'Inverter mode: reversing directions to {}'.format(self.directions)
+
+    def change_breaker_mode(self):
+        self.breaker_mode = not self.breaker_mode
+        print >> sys.stderr, 'Changing breaker mode to {}'.format(str(self.breaker_mode))
+
+    def move(self):
+        """ Move in the current direction """
+        x_increment, y_increment = get_position_increments_for_direction(self.current_dir)
+        x, y = self.position
+        self.position = (x + x_increment, y + y_increment)
+        self.direction_history.append(self.current_dir)
+        print >> sys.stderr, 'Moved to {}, direction {}'.format(self.position, self.current_dir)
+        self.reset_direction_state()
+
+    def change_direction(self):
+        """ Change direction """
+        self.direction_index = self.direction_index + self.direction_increment
+        self.current_dir = self.directions[self.direction_index]
+        print >> sys.stderr, 'Changing direction to {}' .format(self.current_dir)
+
+    def finish(self):
+        print >> sys.stderr, 'Reached exit $'
+        self.done = True
 
     def reset_direction_state(self):
-        print >> sys.stderr, 'Restarting direction switch state'
         self.direction_index = -1
 
-    def add_history(self, x, y, direction):
-        """ Returns True if added, False if a loop is detected """
-        if (x, y) not in self.history:
-            self.history[(x, y)] = []
-
-        dirs = self.history.get((x, y))
-        if direction in dirs:
-            print >> sys.stderr, "LOOP DETECTED"
-            return False
-        else:
-            self.history.get((x, y)).append(direction)
-            return True
-
-    def run(self, map):
-        actions_array = []
+    def run2(self, mmap):
         while not self.done:
-            x, y = self.position
+            self.next2(mmap)
 
-            # Check oif modify direction
-            cell_type = map.get(x, y)
-            if cell_type in ['N', 'S', 'E', 'W']:
-                if cell_type == 'N':
-                    self.current_dir = 'NORTH'
-                elif cell_type == 'S':
-                    self.current_dir = 'SOUTH'
-                elif cell_type == 'W':
-                    self.current_dir = 'WEST'
-                elif cell_type == 'E':
-                    self.current_dir = 'EAST'
-                else:
-                    raise Exception('Could not handle cell type at run stage: {}'.format(cell_type))
+        return self.direction_history
 
-            if self.current_dir == 'SOUTH':
-                next_pos = (x + 1, y)
-            if self.current_dir == 'EAST':
-                next_pos = (x, y + 1)
-            if self.current_dir == 'NORTH':
-                next_pos = (x - 1, y)
-            if self.current_dir == 'WEST':
-                next_pos = (x, y - 1)
 
-            old_dir = self.current_dir
-            history_length = len(self.history)
-            print >> sys.stderr, 'Trying direction {}'.format(self.current_dir)
-            self = self.next(map, next_pos)
-            if self.position != (x, y):
-                print >> sys.stderr, 'Moving to {}'.format(str(self.position))
-                # print old_dir
-                if history_length == len(self.history):
-                    no_loop = self.add_history(x, y, old_dir)
-                else:
-                    print >> sys.stderr, 'Not inserting move in history'
-                if not no_loop:
-                    actions_array = ['LOOP']
-                    return actions_array
-                actions_array.append(old_dir)
-                self.reset_direction_state()
-
-        return actions_array
+def get_position_increments_for_direction(direction):
+    """ Return the coordinate increment according to the direction. """
+    x_increment = 0
+    y_increment = 0
+    if direction == 'SOUTH':
+        x_increment = 1
+        y_increment = 0
+    elif direction == 'NORTH':
+        x_increment = -1
+        y_increment = 0
+    elif direction == 'EAST':
+        x_increment = 0
+        y_increment = 1
+    elif direction == 'WEST':
+        x_increment = 0
+        y_increment = -1
+    else:
+        raise Exception('Unhandled direction : '.format(direction))
+    return (x_increment, y_increment)
 
 
 def process(map_array, lines, columns):
     mmap = Map(map_array, lines, columns)
     state = BenderState(mmap)
-    actions = state.run(mmap)
+    actions = state.run2(mmap)
     return actions
 
 

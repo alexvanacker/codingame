@@ -1,5 +1,4 @@
 import sys
-import math
 
 # Auto-generated code below aims at helping you parse
 # the standard input according to the problem statement.
@@ -13,7 +12,7 @@ class Map:
         self.c = c
         height_map = len(map_array)
         width_map = len(map_array[0])
-        print >> sys.stderr, 'Creating map with '+str(l)+' lines and '+str(c)+' columns, with height='+str(height_map) + 'and width='+str(width_map)
+        print >> sys.stderr, 'Creating map with ' + str(l) + ' lines and ' + str(c) + ' columns, with height=' + str(height_map) + 'and width=' + str(width_map)
         assert len(map_array) == self.l
         assert len(map_array[0]) == self.c
 
@@ -36,7 +35,7 @@ class Map:
                 new_column = []
                 for j, cell in enumerate(self.array[i]):
                     if j == y:
-                        print >> sys.stderr, 'Removing obstacle at {} {}'.format(x,y)
+                        print >> sys.stderr, 'Removing obstacle at {} {}'.format(x, y)
                         new_column.append(' ')
                     else:
                         new_column.append(cell)
@@ -51,6 +50,36 @@ class Map:
                     if i != x or j != y:
                         return (i, j)
         raise Exception('Could not find other teleport')
+
+    def get_cell_with_direction(self, x, y, direction):
+        """ Return the cell and cell type as a tuple (x, y, cell_type)
+        you would reach by going from (x, y) in the given direction.
+        Note: x is from down to up, and y from left to right
+        """
+
+        x_increment = 0
+        y_increment = 0
+        if direction == 'SOUTH':
+            x_increment = 1
+            y_increment = 0
+        elif direction == 'NORTH':
+            x_increment = -1
+            y_increment = 0
+        elif direction == 'EAST':
+            x_increment = 0
+            y_increment = -1
+        elif direction == 'WEST':
+            x_increment = 0
+            y_increment = 1
+        else:
+            raise Exception('Unhandled direction : '.format(direction))
+
+        new_x = x + x_increment
+        new_y = y + y_increment
+        print >> sys.stderr, 'Getting cell at {}'.format((str(new_x), str(new_y)))
+        new_cell_type = self.get(new_x, new_y)
+
+        return (new_x, new_y, new_cell_type)
 
 
 class BenderState:
@@ -68,12 +97,16 @@ class BenderState:
         # For detecting loops, keep the cell and direction, breakermode
         self.history = {}
 
+    def next2(self, mmap):
+        # Get the next cell according to the direction
+        pass
+
     def next(self, mmap, (cell_x, cell_y)):
         ''' Change the state given the cell we go to '''
         cell_type = mmap.get(cell_x, cell_y)
         if cell_type == '#':
             # Try next direction
-            
+
             self.direction_index = self.direction_index + self.direction_increment
             self.current_dir = self.directions[self.direction_index]
             print >> sys.stderr, 'Obstacle, trying to change direction to {}' .format(self.current_dir)
@@ -155,7 +188,6 @@ class BenderState:
         while not self.done:
             x, y = self.position
 
-
             # Check oif modify direction
             cell_type = map.get(x, y)
             if cell_type in ['N', 'S', 'E', 'W']:
@@ -169,7 +201,6 @@ class BenderState:
                     self.current_dir = 'EAST'
                 else:
                     raise Exception('Could not handle cell type at run stage: {}'.format(cell_type))
-
 
             if self.current_dir == 'SOUTH':
                 next_pos = (x + 1, y)
@@ -221,7 +252,6 @@ def main():
     else:
         for a in actions:
             print a
-
 
 
 if __name__ == '__main__':

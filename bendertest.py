@@ -16,6 +16,20 @@ class Test(unittest.TestCase):
         self.assertEquals('@', map.get(1, 1))
         self.assertEquals((1, 1), map.get_starting_point())
 
+    def testMapGetCellWithDirection(self):
+        map_array = ['#####',
+                     '#@B #',
+                     '#X  #',
+                     '#   #',
+                     '#####']
+        lines = 5
+        columns = 5
+        map = bender.Map(map_array, lines, columns)
+        (x, y, cell_type) = map.get_cell_with_direction(1, 1, 'WEST')
+        self.assertEquals((1, 2, 'B'), (x, y, cell_type))
+        (x, y, cell_type) = map.get_cell_with_direction(1, 1, 'SOUTH')
+        self.assertEquals((2, 1, 'X'), (x, y, cell_type))
+
     def testSimpleSouth(self):
         map_array = ['#####',
                      '#@  #',

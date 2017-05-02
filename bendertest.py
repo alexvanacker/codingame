@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
         lines = 5
         columns = 5
         map = bender.Map(map_array, lines, columns)
-        (x, y, cell_type) = map.get_cell_with_direction(1, 1, 'WEST')
+        (x, y, cell_type) = map.get_cell_with_direction(1, 1, 'EAST')
         self.assertEquals((1, 2, 'B'), (x, y, cell_type))
         (x, y, cell_type) = map.get_cell_with_direction(1, 1, 'SOUTH')
         self.assertEquals((2, 1, 'X'), (x, y, cell_type))
@@ -127,9 +127,9 @@ class Test(unittest.TestCase):
         lines = 10
         columns = 10
         actions = bender.process(map_array, lines, columns)
-        expected = ['SOUTH', 'SOUTH', 'EAST','EAST','EAST','EAST','EAST', 
+        expected = ['SOUTH', 'SOUTH', 'EAST', 'EAST', 'EAST', 'EAST', 'EAST',
                     'EAST',
-                    'NORTH', 'NORTH','NORTH','NORTH','NORTH','NORTH',
+                    'NORTH', 'NORTH', 'NORTH', 'NORTH', 'NORTH', 'NORTH',
                     'WEST', 'WEST', 'WEST', 'WEST', 'SOUTH', 'SOUTH']
         self.assertEquals(expected, actions)
 
@@ -144,4 +144,27 @@ class Test(unittest.TestCase):
         columns = 7
         actions = bender.process(map_array, lines, columns)
         expected = ['SOUTH', 'SOUTH', 'SOUTH']
+        self.assertEquals(expected, actions)
+
+    def testBreakerLoop(self):
+        map_array = ['##########',
+                     '#        #',
+                     '#  @     #',
+                     '#  B     #',
+                     '#  S   W #',
+                     '# XXX    #',
+                     '#  B   N #',
+                     '# XXXXXXX#',
+                     '#       $#',
+                     '##########']
+
+        lines = 10
+        columns = 10
+        actions = bender.process(map_array, lines, columns)
+        expected = ['SOUTH', 'SOUTH', 'SOUTH', 'SOUTH',
+                    'EAST', 'EAST', 'EAST', 'EAST',
+                    'NORTH', 'NORTH', 'WEST', 'WEST',
+                    'WEST', 'WEST', 'SOUTH', 'SOUTH',
+                    'SOUTH', 'SOUTH',
+                    'EAST', 'EAST', 'EAST', 'EAST', 'EAST']
         self.assertEquals(expected, actions)

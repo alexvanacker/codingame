@@ -1,4 +1,5 @@
 import sys
+import copy
 
 # Auto-generated code below aims at helping you parse
 # the standard input according to the problem statement.
@@ -80,6 +81,21 @@ class BenderState:
         self.history = []
         self.direction_history = []
 
+    def __str__(self):
+        return str(self.position) + ', breakermode=' + str(self.breaker_mode) + ',direction=' + self.current_dir \
+            + ', direction_index=' + str(self.direction_index)
+
+    def __eq__(self, other):
+        breaker = self.breaker_mode == other.breaker_mode
+        current_dir = self.current_dir == other.current_dir
+        pos = self.position == other.position
+        done = self.done == other.done
+        direction_index = self.direction_index == other.direction_index
+        directions = self.directions == other.directions
+        dir_inc = self.direction_increment == other.direction_increment
+
+        return breaker and current_dir and pos and done and direction_index and directions and dir_inc
+
     def next2(self, mmap):
         """ A more 'FSM' implementation """
         # Get the next cell according to the direction
@@ -95,6 +111,8 @@ class BenderState:
         elif cell_type == 'X':
             if self.breaker_mode:
                 mmap.remove_obstacle(next_x, next_y)
+                # Reset history since map has changed
+                self.history = []
                 self.move()
             else:
                 self.change_direction()
@@ -112,6 +130,8 @@ class BenderState:
         else:
             raise Exception('Unhandled cell type {} at {}'.format(cell_type, (next_x, next_y)))
 
+        return self
+
     def teleport(self, x, y, mmap):
         (other_x, other_y) = mmap.get_other_teleport(x, y)
         self.position = (other_x, other_y)
@@ -127,7 +147,7 @@ class BenderState:
             self.current_dir = 'WEST'
         elif direction_letter == 'E':
             self.current_dir = 'EAST'
-        print >> sys.stderr, 'Changing direction to {}'.format(self.current_dir)
+        print >> sys.stderr, 'Changing direction to {} because of modifier'.format(self.current_dir)
 
     def invert_directions(self):
         self.directions.reverse()
@@ -149,11 +169,16 @@ class BenderState:
     def change_direction(self):
         """ Change direction """
         self.direction_index = self.direction_index + self.direction_increment
-        self.current_dir = self.directions[self.direction_index]
+        # Check that you're not in that direction already
+        if not self.current_dir == self.directions[self.direction_index]:
+            self.current_dir = self.directions[self.direction_index]
+        else:
+            self.direction_index = self.direction_index + self.direction_increment
+            self.current_dir = self.directions[self.direction_index]
         print >> sys.stderr, 'Changing direction to {}' .format(self.current_dir)
 
     def finish(self):
-        print >> sys.stderr, 'Reached exit $'
+        print >> sys.stderr, 'Reached exit'
         self.done = True
 
     def reset_direction_state(self):
@@ -162,6 +187,15 @@ class BenderState:
     def run2(self, mmap):
         while not self.done:
             self.next2(mmap)
+            if self not in self.history:
+                self.history.append(copy.copy(self))
+            else:
+                print >> sys.stderr, 'Detected Loop with state {}'.format(self)
+                print >> sys.stderr, 'History:'
+                for history_state in self.history:
+                    print >> sys.stderr, str(history_state)
+                self.direction_history = ['LOOP']
+                self.done = True
 
         return self.direction_history
 

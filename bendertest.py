@@ -168,3 +168,39 @@ class Test(unittest.TestCase):
                     'SOUTH', 'SOUTH',
                     'EAST', 'EAST', 'EAST', 'EAST', 'EAST']
         self.assertEquals(expected, actions)
+
+    def noLoops(self):
+        map_array = ['###############',
+                     '#  #@#I  T$#  #',
+                     '#  #    IB #  #',
+                     '#  #     W #  #',
+                     '#  #      ##  #',
+                     '#  #B XBN# #  #',
+                     '#  ##      #  #',
+                     '#  #       #  #',
+                     '#  #     W #  #',
+                     '#  #      ##  #',
+                     '#  #B XBN# #  #',
+                     '#  ##      #  #',
+                     '#  #       #  #',
+                     '#  #     W #  #',
+                     '#  #      ##  #',
+                     '#  #B XBN# #  #',
+                     '#  ##      #  #',
+                     '#  #       #  #',
+                     '#  #       #  #',
+                     '#  #      ##  #',
+                     '#  #  XBIT #  #',
+                     '#  #########  #',
+                     '#             #',
+                     '# ##### ##### #',
+                     '# #     #     #',
+                     '# #     #  ## #',
+                     '# #     #   # #',
+                     '# ##### ##### #',
+                     '#             #',
+                     '###############']
+        lines = 30
+        columns = 15
+        actions = bender.process(map_array, lines, columns)
+        self.assertEquals('SOUTH', actions[0])

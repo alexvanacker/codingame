@@ -1,0 +1,6 @@
+[package]
+name = "last_crusade"
+version = "0.1.0"
+authors = ["Alexis Vanacker <alexvanacker@gmail.com>"]
+
+[dependencies]

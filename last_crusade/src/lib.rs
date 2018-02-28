@@ -22,27 +22,21 @@ fn main() {
     let mut input_line = String::new();
     io::stdin().read_line(&mut input_line).unwrap();
     let inputs = input_line.split(" ").collect::<Vec<_>>();
-    let w = parse_input!(inputs[0], i32); // number of columns.
+    //let w = parse_input!(inputs[0], i32); // number of columns.
     let h = parse_input!(inputs[1], i32); // number of rows.
-    let mut map: Vec<Vec<i32>> = Vec::with_capacity(h as usize);
+    let mut map: Vec<Vec<String>> = Vec::with_capacity(h as usize);
 
     for i in 0..h as usize {
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line).unwrap();
         let line = input_line.trim_right().to_string(); // represents a line in the grid and contains W integers. Each integer represents one room of a given type.
-        let mut row: Vec<i32> = Vec::with_capacity(w as usize);
-
-        for room in line.split(" ").collect::<Vec<_>>(){
-            let room = room.parse::<i32>().unwrap();
-            row.push(room);
-        }
-        map.push(row);
+        map.push(line.split(" ").map(|s| s.to_string()).collect::<Vec<String>>());
     }
 
     //print_err!("Map is {:?}", map);
     let mut input_line = String::new();
     io::stdin().read_line(&mut input_line).unwrap();
-    let ex = parse_input!(input_line, i32); // the coordinate along the X axis of the exit (not useful for this first mission, but must be read).
+    //let ex = parse_input!(input_line, i32); // the coordinate along the X axis of the exit (not useful for this first mission, but must be read).
 
     // game loop
     loop {
@@ -53,7 +47,7 @@ fn main() {
         let yi = parse_input!(inputs[1], i32);
         let pos = inputs[2].trim().to_string();
 
-        let room_type = map[yi as usize][xi as usize];
+        let room_type = &map[yi as usize][xi as usize];
         print_err!("Room type for ({}, {}): {}", xi, yi, room_type);
         let (x_exit, y_exit) = get_exit(room_type, xi ,yi, &pos);
         // Write an action using println!("message...");
@@ -64,27 +58,28 @@ fn main() {
     }
 }
 
-pub fn get_exit(room_type: i32, pos_x: i32, pos_y: i32, pos: &String) -> (i32, i32) {
+pub fn get_exit(room_type: &str, pos_x: i32, pos_y: i32, pos: &String) -> (i32, i32) {
+    let bottom = (pos_x, pos_y + 1);
+    let left = (pos_x - 1, pos_y);
+    let right = (pos_x + 1, pos_y);
     match (room_type, pos.as_ref()) {
-        (0, _) => return (-1, -1),
-        (1, _) => return (pos_x, pos_y + 1),
-        (2, "LEFT") => return (pos_x + 1, pos_y),
-        (2, "RIGHT") => return (pos_x - 1, pos_y),
-        (3, _) => (pos_x, pos_y + 1),
-        (4, "TOP") => (pos_x - 1, pos_y),
-        (4, "RIGHT") => (pos_x, pos_y + 1),
-        (5, "TOP") => (pos_x + 1, pos_y),
-        (5, "LEFT") => (pos_x, pos_y + 1),
-        (6, "LEFT") => return (pos_x + 1, pos_y),
-        (6, "RIGHT") => return (pos_x - 1, pos_y),
-        (7, _) => return (pos_x, pos_y + 1),
-        (8, _) => return (pos_x, pos_y + 1),
-        (9, _) => return (pos_x, pos_y + 1),
-        (10, _) => return (pos_x - 1, pos_y),
-        (11, _) => (pos_x + 1, pos_y),
-        (12, _) => (pos_x, pos_y + 1),
-        (13, _) => (pos_x, pos_y + 1),
-        _ => (-1, -1)
-
+        ("1", _) => bottom,
+        ("2", "LEFT") => right,
+        ("2", "RIGHT") => left,
+        ("3", _) => bottom,
+        ("4", "TOP") => left,
+        ("4", "RIGHT") => bottom,
+        ("5", "TOP") => right,
+        ("5", "LEFT") => bottom,
+        ("6", "LEFT") => right,
+        ("6", "RIGHT") => left,
+        ("7", _) => bottom,
+        ("8", _) => bottom,
+        ("9", _) => bottom,
+        ("10", _) => left,
+        ("11", _) => right,
+        ("12", _) => bottom,
+        ("13", _) => bottom,
+        _ => panic!("Unexpected room type: {:?}", room_type)
     }
 }

@@ -1,4 +1,3 @@
-
 use std::io;
 
 macro_rules! print_err {
@@ -30,7 +29,11 @@ fn main() {
         let mut input_line = String::new();
         io::stdin().read_line(&mut input_line).unwrap();
         let line = input_line.trim_right().to_string(); // represents a line in the grid and contains W integers. Each integer represents one room of a given type.
-        map.push(line.split(" ").map(|s| s.to_string()).collect::<Vec<String>>());
+        map.push(
+            line.split(" ")
+                .map(|s| s.to_string())
+                .collect::<Vec<String>>(),
+        );
     }
 
     //print_err!("Map is {:?}", map);
@@ -49,7 +52,7 @@ fn main() {
 
         let room_type = &map[yi as usize][xi as usize];
         print_err!("Room type for ({}, {}): {}", xi, yi, room_type);
-        let (x_exit, y_exit) = get_exit(room_type, xi ,yi, &pos);
+        let (x_exit, y_exit) = get_exit(room_type, xi, yi, &pos);
         // Write an action using println!("message...");
         // To debug: print_err!("Debug message...");
 
@@ -80,6 +83,6 @@ pub fn get_exit(room_type: &str, pos_x: i32, pos_y: i32, pos: &String) -> (i32, 
         ("11", _) => right,
         ("12", _) => bottom,
         ("13", _) => bottom,
-        _ => panic!("Unexpected room type: {:?}", room_type)
+        _ => panic!("Unexpected room type: {:?}", room_type),
     }
 }

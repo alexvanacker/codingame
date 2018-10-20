@@ -31,25 +31,40 @@ fn main() {
     println!("1");
 }
 
-#[derive(Debug)]
+// fn compute_propagation_time(g: Graph, n: i32) -> i32 {
+//     let node_visit_status_map = g.build_node_visited_map();
+//     dfs(&g, n, node_visit_status_map)
+// }
+
+// fn dfs(g: &Graph, n: i32, mut status: HashMap<&i32, bool>) -> i32 {
+//     status.insert(&n, true);
+//     let mut node_time = 0;
+//     g.get_neighbors(n).unwrap().iter()
+//         .filter(|neighbor| !status.get(neighbor).unwrap())
+//         .map(|neighbor| node_time = cmp::max(node_time, dfs(g, *neighbor, status)));
+//     node_time
+// }
+
+#[derive(Clone, Debug)]
 struct Graph {
-    graph: HashMap<i32, Vec<i32>>
+    edges: HashMap<i32, Vec<i32>>
 }
 
-impl<'a> Graph {
-    fn init() -> Graph {
+impl Graph {
+   fn init() -> Graph {
         Graph {
-            graph: HashMap::new()
+            edges: HashMap::new()
         }
-    }
+   }
 
-    fn get_neighbors(&'a self, node: i32) -> Option<&'a Vec<i32>> {
-        self.graph.get(&node)
-    }
+   fn add_node_and_neighbor(&mut self, node: i32, neighbor: i32) {
+    self.edges.entry(node).or_insert(Vec::new()).push(neighbor);
+    self.edges.entry(neighbor).or_insert(Vec::new()).push(node);
+   }
 
-    fn add_node_and_neighbor(&mut self, node: i32, neighbor: i32) {
-        self.graph.entry(node).or_insert(Vec::new()).push(neighbor);
-    }
+   fn get_neighbors<'a>(self: &'a Graph, node: i32) -> Option<&'a Vec<i32>> {
+    self.edges.get(&node)
+   }
 }
 
 #[cfg(test)]
@@ -59,7 +74,7 @@ mod tests {
     #[test]
     fn empty_graph_is_empty() {
         let graph = Graph::init();
-        assert_eq!(0, graph.graph.len());
+        assert_eq!(0, graph.edges.len());
     }
 
     #[test]

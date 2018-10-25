@@ -1,5 +1,10 @@
+#![feature(test)]
+extern crate test;
+
 use std::cmp;
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::VecDeque;
 use std::io;
 
 macro_rules! parse_input {
@@ -8,10 +13,6 @@ macro_rules! parse_input {
     };
 }
 
-/**
- * Auto-generated code below aims at helping you parse
- * the standard input according to the problem statement.
- **/
 fn main() {
     let mut input_line = String::new();
     io::stdin().read_line(&mut input_line).unwrap();
@@ -25,7 +26,7 @@ fn main() {
         let yi = parse_input!(inputs[1], i32); // the ID of a person which is adjacent to xi
         graph.add_node_and_neighbor(xi, yi);
     }
-
+    eprintln!("Number of vertices {:?}", graph.get_nb_vertices());
     // Write an action using println!("message...");
     // To debug: eprintln!("Debug message...");
     eprintln!("{:?}", graph);
@@ -36,11 +37,8 @@ fn main() {
 }
 
 fn compute_propagation_time(g: &Graph) -> usize {
-    let mut propagation_time = g.edges.keys().len();
-    for node in g.edges.keys() {
-        propagation_time = cmp::min(compute_propagation_time_for_node(g, node), propagation_time);
-    }
-    propagation_time
+    let root = g.find_root();
+    compute_propagation_time_for_node(g, &root)
 }
 
 fn compute_propagation_time_for_node(g: &Graph, n: &i32) -> usize {
@@ -73,6 +71,28 @@ impl Graph {
         }
     }
 
+    fn generate_tree(nb_edges: usize) -> Graph {
+        let mut graph = Graph::init();
+        for i in 0..nb_edges / 2 {
+            let node = i as i32;
+            let mut left = node + 1;
+            while graph.edges.contains_key(&left) {
+                left = left + 1
+            }
+            let mut right = left + 1;
+            while graph.edges.contains_key(&right) {
+                right = right + 1;
+            }
+            graph.add_node_and_neighbor(node, left);
+            graph.add_node_and_neighbor(node, right);
+        }
+        graph
+    }
+
+    fn get_nb_vertices(&self) -> usize {
+        self.edges.keys().len()
+    }
+
     fn add_node_and_neighbor(&mut self, node: i32, neighbor: i32) {
         self.edges.entry(node).or_insert(Vec::new()).push(neighbor);
         self.edges.entry(neighbor).or_insert(Vec::new()).push(node);
@@ -89,11 +109,96 @@ impl Graph {
         }
         map
     }
+
+    fn get_leaves(&self) -> Vec<i32> {
+        self.edges
+            .iter()
+            .filter(|(_n, ref v)| *(&v.len()) == 1)
+            .map(|(&n, ref _v)| n)
+            .collect::<Vec<i32>>()
+    }
+
+    fn find_shortest_path(&self, start: i32, end: i32) -> Vec<i32> {
+        if start == end {
+            return vec![start];
+        }
+        let mut to_visit = VecDeque::new();
+        to_visit.push_back(start);
+        let mut visited = HashSet::new();
+        let mut parents: HashMap<i32, i32> = HashMap::new();
+        while !to_visit.is_empty() {
+            let node = to_visit.pop_front().unwrap();
+            eprintln!("Shorted path: visiting {:?}", node);
+            self.get_neighbors(&node).unwrap().iter().for_each(|n| {
+                if !visited.contains(n) {
+                    to_visit.push_back(*n);
+                    parents.insert(*n, node);
+                }
+            });
+            visited.insert(node);
+            if node == end {
+                break;
+            }
+        }
+        eprintln!("child parent map: {:?}", parents);
+        self.build_path(parents, start, end)
+    }
+
+    fn build_path(&self, child_parent_map: HashMap<i32, i32>, start: i32, end: i32) -> Vec<i32> {
+        let mut path: Vec<i32> = Vec::new();
+        let mut parent = *child_parent_map.get(&end).unwrap();
+        path.push(end);
+        while parent != start {
+            path.push(parent);
+            parent = *child_parent_map.get(&parent).unwrap();
+        }
+        path.push(start);
+        path.reverse();
+        eprintln!("Path from {:?} to {:?} is {:?}", start, end, path);
+        path
+    }
+
+    fn find_root(&self) -> i32 {
+        // Find (u,v) vertices such that dist(u,v) is the maximum distance in tree
+        // i.e. the tree diameter
+        let u = self.bsf(self.get_leaves()[0]);
+        let v = self.bsf(u);
+        // Find shortest path between the two and get the middle node. That is the tree root.
+        let path = self.find_shortest_path(u, v);
+        let radius = path.len() / 2;
+        let root = path[radius];
+        eprintln!("Root: {:?}", root);
+        root
+    }
+
+    fn bsf(&self, node: i32) -> i32 {
+        let mut to_check = VecDeque::new();
+        to_check.push_back(node);
+        let mut visited = HashSet::new();
+        eprintln!("BSF To check: {:?}", to_check);
+        let mut last = node;
+        while !to_check.is_empty() {
+            let node = to_check.pop_front().unwrap();
+            if !visited.contains(&node) {
+                eprintln!("BSF Visiting: {:?}", &node);
+                visited.insert(node);
+                self.edges.get(&node).unwrap().iter().for_each(|x| {
+                    if !to_check.contains(x) && !visited.contains(x) {
+                        to_check.push_back(*x)
+                    }
+                });
+                eprintln!("To check: {:?}", to_check);
+            }
+            last = node;
+        }
+        last
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use test::Bencher;
 
     #[test]
     fn empty_graph_is_empty() {
@@ -121,6 +226,32 @@ mod tests {
     }
 
     #[test]
+    fn find_shortest_path_self() {
+        let mut graph = Graph::init();
+        graph.add_node_and_neighbor(0, 1);
+        graph.add_node_and_neighbor(0, 2);
+        graph.add_node_and_neighbor(1, 3);
+        graph.add_node_and_neighbor(1, 4);
+        graph.add_node_and_neighbor(2, 5);
+        graph.add_node_and_neighbor(2, 6);
+        let path = vec![0];
+        assert_eq!(path, graph.find_shortest_path(0, 0));
+    }
+
+    #[test]
+    fn find_shortest_path() {
+        let mut graph = Graph::init();
+        graph.add_node_and_neighbor(0, 1);
+        graph.add_node_and_neighbor(0, 2);
+        graph.add_node_and_neighbor(1, 3);
+        graph.add_node_and_neighbor(1, 4);
+        graph.add_node_and_neighbor(2, 5);
+        graph.add_node_and_neighbor(2, 6);
+        let path = vec![3, 1, 0, 2, 6];
+        assert_eq!(path, graph.find_shortest_path(3, 6));
+    }
+
+    #[test]
     fn simple_propagation_time_for_node() {
         let mut graph = Graph::init();
         graph.add_node_and_neighbor(0, 1);
@@ -136,5 +267,35 @@ mod tests {
         graph.add_node_and_neighbor(1, 2);
         let result = compute_propagation_time(&graph);
         assert_eq!(1, result);
+    }
+
+    #[test]
+    fn find_root_simple() {
+        let mut graph = Graph::init();
+        graph.add_node_and_neighbor(0, 1);
+        graph.add_node_and_neighbor(0, 2);
+        graph.add_node_and_neighbor(1, 3);
+        graph.add_node_and_neighbor(1, 4);
+        graph.add_node_and_neighbor(2, 5);
+        graph.add_node_and_neighbor(2, 6);
+        assert_eq!(0, graph.find_root());
+    }
+
+    #[test]
+    fn test_2() {
+        let mut graph = Graph::init();
+        graph.add_node_and_neighbor(0, 1);
+        graph.add_node_and_neighbor(1, 2);
+        graph.add_node_and_neighbor(1, 4);
+        graph.add_node_and_neighbor(2, 3);
+        graph.add_node_and_neighbor(4, 5);
+        graph.add_node_and_neighbor(4, 6);
+        assert_eq!(2, compute_propagation_time(&graph));
+    }
+
+    #[bench]
+    fn bench_thousands(b: &mut Bencher) {
+        let graph = Graph::generate_tree(3000);
+        b.iter(|| compute_propagation_time(&graph));
     }
 }

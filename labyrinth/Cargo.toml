@@ -1,0 +1,6 @@
+[package]
+name = "labyrinth"
+version = "0.1.0"
+authors = ["Alexis Vanacker <alexis.vanacker@concordnow.com>"]
+
+[dependencies]

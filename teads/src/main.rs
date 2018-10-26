@@ -1,6 +1,3 @@
-#![feature(test)]
-extern crate test;
-
 use std::cmp;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -60,6 +57,23 @@ fn dfs(g: &Graph, n: &i32, status: &mut HashMap<i32, bool>) -> usize {
 }
 
 #[derive(Clone, Debug)]
+struct BSFResult {
+    start: i32,
+    last_node: i32,
+    child_parent_map: HashMap<i32, i32>,
+}
+
+impl BSFResult {
+    fn build(start: i32, end: i32, child_parent_map: HashMap<i32, i32>) -> BSFResult {
+        BSFResult {
+            start: start,
+            last_node: end,
+            child_parent_map: child_parent_map,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 struct Graph {
     edges: HashMap<i32, Vec<i32>>,
 }
@@ -69,24 +83,6 @@ impl Graph {
         Graph {
             edges: HashMap::new(),
         }
-    }
-
-    fn generate_tree(nb_edges: usize) -> Graph {
-        let mut graph = Graph::init();
-        for i in 0..nb_edges / 2 {
-            let node = i as i32;
-            let mut left = node + 1;
-            while graph.edges.contains_key(&left) {
-                left = left + 1
-            }
-            let mut right = left + 1;
-            while graph.edges.contains_key(&right) {
-                right = right + 1;
-            }
-            graph.add_node_and_neighbor(node, left);
-            graph.add_node_and_neighbor(node, right);
-        }
-        graph
     }
 
     fn get_nb_vertices(&self) -> usize {
@@ -161,44 +157,44 @@ impl Graph {
     fn find_root(&self) -> i32 {
         // Find (u,v) vertices such that dist(u,v) is the maximum distance in tree
         // i.e. the tree diameter
-        let u = self.bsf(self.get_leaves()[0]);
-        let v = self.bsf(u);
+        let bsf_result_1 = self.bsf(self.get_leaves()[0]);
+        let bsf_result_2 = self.bsf(bsf_result_1.last_node);
         // Find shortest path between the two and get the middle node. That is the tree root.
-        let path = self.find_shortest_path(u, v);
+        let path = self.build_path(
+            bsf_result_2.child_parent_map,
+            bsf_result_2.start,
+            bsf_result_2.last_node,
+        );
         let radius = path.len() / 2;
         let root = path[radius];
         eprintln!("Root: {:?}", root);
         root
     }
 
-    fn bsf(&self, node: i32) -> i32 {
+    fn bsf(&self, start: i32) -> BSFResult {
         let mut to_check = VecDeque::new();
-        to_check.push_back(node);
+        to_check.push_back(start);
         let mut visited = HashSet::new();
-        eprintln!("BSF To check: {:?}", to_check);
-        let mut last = node;
+        let mut child_parent_map = HashMap::new();
+        let mut last = start;
         while !to_check.is_empty() {
-            let node = to_check.pop_front().unwrap();
-            if !visited.contains(&node) {
-                eprintln!("BSF Visiting: {:?}", &node);
-                visited.insert(node);
-                self.edges.get(&node).unwrap().iter().for_each(|x| {
-                    if !to_check.contains(x) && !visited.contains(x) {
-                        to_check.push_back(*x)
-                    }
-                });
-                eprintln!("To check: {:?}", to_check);
-            }
-            last = node;
+            let n = to_check.pop_front().unwrap();
+            visited.insert(n);
+            self.edges.get(&n).unwrap().iter().for_each(|x| {
+                if !visited.contains(x) {
+                    to_check.push_back(*x);
+                    child_parent_map.insert(*x, n);
+                }
+            });
+            last = n;
         }
-        last
+        BSFResult::build(start, last, child_parent_map)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use test::Bencher;
 
     #[test]
     fn empty_graph_is_empty() {
@@ -291,11 +287,5 @@ mod tests {
         graph.add_node_and_neighbor(4, 5);
         graph.add_node_and_neighbor(4, 6);
         assert_eq!(2, compute_propagation_time(&graph));
-    }
-
-    #[bench]
-    fn bench_thousands(b: &mut Bencher) {
-        let graph = Graph::generate_tree(3000);
-        b.iter(|| compute_propagation_time(&graph));
     }
 }
